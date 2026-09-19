@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { DevhubCatMark } from "@/components/brand";
+import { DevhubCatBadge } from "@/components/brand";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   {
@@ -56,10 +56,11 @@ export function LandingFooter() {
       </section>
 
       <footer className="landing-footer" aria-label="Footer">
+        <div className="landing-finale-divider" aria-hidden="true" />
         <div className="landing-footer-grid">
           <div className="landing-footer-brand">
             <span className="landing-footer-logo">
-              <DevhubCatMark size={34} />
+              <DevhubCatBadge size={34} />
               <strong>DevHub</strong>
             </span>
             <p>
@@ -85,7 +86,7 @@ export function LandingFooter() {
           <span className="landing-footer-note">Built on public GitHub signals.</span>
         </div>
         <div className="landing-footer-wordmark" aria-hidden="true">
-          DEVHUB
+          
         </div>
       </footer>
     </div>

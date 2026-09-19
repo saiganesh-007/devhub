@@ -105,9 +105,10 @@
 }
 
 .loader-brand-word {
+  font-family: var(--font-devhub-wordmark), var(--font-geist-sans), sans-serif;
   font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.32em;
+  font-weight: 700;
+  letter-spacing: 0.3em;
   color: #f2f7ff;
 }
 
@@ -319,7 +320,9 @@
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  transition: max-width 0.45s var(--lh-ease), padding 0.45s var(--lh-ease), border-radius 0.45s var(--lh-ease), background 0.3s ease;
+  /* Expand choreography (also the resting state): shell opens first,
+     content follows. Collapse overrides below add directional delays. */
+  transition: max-width 0.55s var(--lh-ease) 0.05s, padding 0.55s var(--lh-ease) 0.05s, border-radius 0.55s var(--lh-ease), background 0.3s ease, gap 0.5s var(--lh-ease);
 }
 
 .landing-pill-brand {
@@ -334,12 +337,16 @@
   font-weight: 800;
   letter-spacing: 0.18em;
   white-space: nowrap;
-  transition: opacity 0.3s ease, transform 0.45s var(--lh-ease), max-width 0.45s var(--lh-ease), padding 0.3s ease;
+  /* Expand: content settles back once the shell has reopened. */
+  transition: opacity 0.3s ease 0.22s, transform 0.55s var(--lh-ease) 0.12s, max-width 0.55s var(--lh-ease) 0.08s, padding 0.35s ease 0.1s, margin 0.35s ease 0.1s;
   max-width: 220px;
   overflow: hidden;
 }
 
 .landing-pill-word {
+  font-family: var(--font-devhub-wordmark), var(--font-geist-sans), sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   transition: opacity 0.25s ease;
 }
 
@@ -347,7 +354,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  transition: opacity 0.3s ease, max-width 0.45s var(--lh-ease), transform 0.45s var(--lh-ease);
+  transition: opacity 0.3s ease 0.22s, max-width 0.55s var(--lh-ease) 0.08s, transform 0.55s var(--lh-ease) 0.12s;
   max-width: 340px;
   overflow: hidden;
 }
@@ -373,7 +380,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: opacity 0.3s ease, max-width 0.45s var(--lh-ease), transform 0.45s var(--lh-ease);
+  transition: opacity 0.3s ease 0.22s, max-width 0.55s var(--lh-ease) 0.08s, transform 0.55s var(--lh-ease) 0.12s;
   max-width: 340px;
   overflow: hidden;
   white-space: nowrap;
@@ -418,16 +425,22 @@
   background: linear-gradient(135deg, rgba(122, 210, 255, 0.24), rgba(90, 200, 255, 0.42)) !important;
 }
 
+/* The compact cat is always mounted in the same shell — it morphs open
+   via width/opacity/scale, never display-swaps, so the logo visibly
+   travels from the left into the centered compact state. */
 .landing-pill-collapsed-cat {
-  display: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 0;
+  height: 44px;
   border-radius: 50%;
   opacity: 0;
-  transform: scale(0.7);
-  transition: opacity 0.3s ease, transform 0.45s var(--lh-ease);
+  transform: scale(0.6);
+  overflow: hidden;
+  flex: none;
+  pointer-events: none;
+  transition: width 0.4s var(--lh-ease) 0s, opacity 0.22s ease 0.05s, transform 0.45s var(--lh-ease) 0s;
 }
 
 .landing-pill-menu-btn {
@@ -443,10 +456,15 @@
   cursor: pointer;
 }
 
+/* Collapse choreography (~600ms total): text fades first, links drift
+   toward center while fading, the shell shrinks, and only then the
+   mascot opens centered. Opacity leads so text never collides. */
 .landing-pill.is-collapsed:not(.is-expanded) {
   max-width: 68px;
   padding: 4px;
   justify-content: center;
+  gap: 0;
+  transition: max-width 0.55s var(--lh-ease) 0.1s, padding 0.55s var(--lh-ease) 0.1s, border-radius 0.55s var(--lh-ease), background 0.3s ease, gap 0.4s var(--lh-ease) 0.1s;
 }
 
 .landing-pill.is-collapsed:not(.is-expanded) .landing-pill-brand,
@@ -458,16 +476,15 @@
   margin: 0;
   transform: translateX(6px);
   pointer-events: none;
+  transition: opacity 0.18s ease 0s, transform 0.5s var(--lh-ease) 0.1s, max-width 0.55s var(--lh-ease) 0.15s, padding 0.35s ease 0.12s, margin 0.35s ease 0.12s;
 }
 
 .landing-pill.is-collapsed:not(.is-expanded) .landing-pill-collapsed-cat {
-  display: inline-flex;
+  width: 44px;
   opacity: 1;
   transform: scale(1);
-}
-
-.landing-pill.is-collapsed.is-expanded .landing-pill-collapsed-cat {
-  display: none;
+  pointer-events: auto;
+  transition: width 0.5s var(--lh-ease) 0.2s, opacity 0.25s ease 0.28s, transform 0.5s var(--lh-ease) 0.2s;
 }
 
 .landing-mobile-menu {
@@ -1607,7 +1624,7 @@
 .workflows {
   max-width: 1200px;
   margin: 0 auto;
-  padding: clamp(64px, 9vw, 130px) clamp(20px, 5vw, 72px) clamp(70px, 8vw, 120px);
+  padding: clamp(64px, 9vw, 130px) clamp(20px, 5vw, 72px) clamp(36px, 5vw, 72px);
 }
 
 .workflows-head {
@@ -1780,24 +1797,85 @@
 .landing-close {
   position: relative;
   z-index: 5;
-  background: linear-gradient(180deg, #060d17 0%, #0a1424 90px, #eceef1 220px, #eceef1 100%);
-  padding: clamp(48px, 7vw, 110px) clamp(14px, 4vw, 64px) 30px;
+  /* ONE continuous finale canvas: flex column so the CTA breathes in the
+     upper/middle and the footer anchors to the actual page bottom.
+     Same dark base as the rest of the page — variation comes only from
+     the glows, never from a block background switch. */
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(180deg, transparent 72%, rgba(3, 6, 11, 0.5)),
+    radial-gradient(1100px 460px at 50% 2%, rgba(90, 200, 255, 0.07), transparent 65%),
+    radial-gradient(900px 520px at 85% 30%, rgba(140, 123, 255, 0.06), transparent 60%),
+    linear-gradient(180deg, rgba(5, 11, 19, 0) 0%, rgba(5, 11, 19, 0) 22%, #050b13 48%, #06101a 74%, #040810 100%);
+  padding: clamp(24px, 4vw, 64px) clamp(14px, 4vw, 64px) 0;
+  overflow: clip;
+}
+
+.landing-close::before {
+  /* Faint blue glow bridging the feature section into the CTA emergence —
+     soft, not flashy. Stretches past the top edge so no cutoff line forms. */
+  content: "";
+  position: absolute;
+  inset: -12% 0 0 0;
+  pointer-events: none;
+  background:
+    radial-gradient(880px 260px at 50% 6%, rgba(90, 170, 255, 0.07), transparent 70%),
+    radial-gradient(720px 300px at 50% 22%, rgba(90, 170, 255, 0.08), transparent 70%);
+}
+
+.landing-close::after {
+  /* The previous section's grid dissolves into the finale: full strength
+     at the top edge, half by a third down, gone before the CTA. */
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: min(460px, 60%);
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(147, 164, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(147, 164, 184, 0.05) 1px, transparent 1px);
+  background-size: 52px 52px;
+  -webkit-mask-image: linear-gradient(180deg, black 0%, rgba(0, 0, 0, 0.5) 35%, transparent 75%);
+  mask-image: linear-gradient(180deg, black 0%, rgba(0, 0, 0, 0.5) 35%, transparent 75%);
 }
 
 .landing-cta {
   position: relative;
-  max-width: 1200px;
+  /* Centered in the finale's breathing space: CTA up top/middle,
+     flexible air below, footer pushed to the page bottom. */
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 760px;
   margin: 0 auto;
-  border-radius: 36px;
-  padding: clamp(56px, 8vw, 110px) clamp(24px, 6vw, 80px);
+  padding: clamp(32px, 5vw, 64px) clamp(20px, 4vw, 48px);
   text-align: center;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 50% -30%, rgba(122, 210, 255, 0.32), transparent 55%),
-    radial-gradient(circle at 85% 110%, rgba(140, 123, 255, 0.28), transparent 55%),
-    #04070d;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.35);
+  /* No card: the CTA lives directly in the finale environment. */
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.landing-cta::before {
+  /* Soft radial glow behind the heading — atmosphere, not a container. */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: min(680px, 90vw);
+  height: 340px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(90, 170, 255, 0.1), transparent 70%);
 }
 
 .landing-cta-eyebrow {
@@ -1810,7 +1888,7 @@
 }
 
 .landing-cta h2 {
-  margin: 16px auto 0;
+  margin: 18px auto 0;
   max-width: 640px;
   font-size: clamp(1.9rem, 4vw, 3.1rem);
   letter-spacing: -0.045em;
@@ -1855,15 +1933,24 @@
 
 .landing-footer {
   position: relative;
+  width: 100%;
   max-width: 1200px;
-  margin: 22px auto 0;
-  border-radius: 36px;
-  background: #fbfbfc;
-  color: #14171a;
-  padding: clamp(28px, 4vw, 52px) clamp(20px, 4vw, 56px) 150px;
+  margin: auto auto 0;
+  /* No card: the footer continues the same finale environment. */
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: #e8eef7;
+  padding: clamp(28px, 4vw, 52px) clamp(20px, 4vw, 56px) clamp(28px, 4vw, 40px);
   overflow: hidden;
-  border: 1px solid rgba(20, 23, 26, 0.06);
-  box-shadow: 0 24px 70px rgba(10, 20, 35, 0.12);
+}
+
+.landing-finale-divider {
+  max-width: 1200px;
+  height: 1px;
+  margin: clamp(28px, 4vw, 56px) auto 0;
+  background: linear-gradient(90deg, transparent, rgba(148, 184, 220, 0.22), transparent);
 }
 
 .landing-footer-grid {
@@ -1881,8 +1968,11 @@
 }
 
 .landing-footer-logo strong {
+  font-family: var(--font-devhub-wordmark), var(--font-geist-sans), sans-serif;
   font-size: 17px;
-  letter-spacing: -0.01em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
 }
 
 .landing-footer-brand p {
@@ -1890,7 +1980,7 @@
   max-width: 300px;
   font-size: 13px;
   line-height: 1.65;
-  color: #5b626b;
+  color: #9db0c7;
 }
 
 .landing-footer-grid h3 {
@@ -1898,6 +1988,7 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  color: #fff;
 }
 
 .landing-footer-grid ul {
@@ -1909,13 +2000,13 @@
 }
 
 .landing-footer-grid ul a {
-  color: #5b626b;
+  color: #9db0c7;
   text-decoration: none;
   font-size: 13px;
 }
 
 .landing-footer-grid ul a:hover {
-  color: #0b0d0f;
+  color: #fff;
   text-decoration: underline;
 }
 
@@ -1928,21 +2019,24 @@
   flex-wrap: wrap;
   margin-top: 34px;
   padding-top: 22px;
-  border-top: 1px solid rgba(20, 23, 26, 0.09);
+  border-top: 1px solid rgba(148, 184, 220, 0.12);
   font-size: 12px;
-  color: #7a828c;
+  color: #6e7e95;
 }
 
 .landing-footer-wordmark {
+  /* Background echo only: anchored to the actual bottom edge so the
+     typography disappears beneath it. Adds no page height, no blank
+     space — footer overflow clips it. */
   position: absolute;
   left: 50%;
-  bottom: -4vw;
+  bottom: -0.7em;
   transform: translateX(-50%);
   font-size: clamp(6rem, 22vw, 22rem);
   font-weight: 900;
   letter-spacing: -0.06em;
   line-height: 1;
-  color: rgba(20, 25, 32, 0.045);
+  color: rgba(148, 184, 255, 0.03);
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
@@ -2056,7 +2150,7 @@
      static layout (and the footer reveal) from its inline styles. */
   .j-frame,
   .j-copy,
-  .landing-cta,
+  .landing-cta > *,
   .landing-footer-grid > *,
   .landing-footer-meta,
   .landing-footer-wordmark {
@@ -2118,13 +2212,8 @@
     padding-top: 40px;
   }
 
-  .landing-cta,
   .landing-footer {
-    border-radius: 26px;
-  }
-
-  .landing-footer {
-    padding-bottom: 110px;
+    padding-bottom: 32px;
   }
 
   .landing-footer-grid {
@@ -2221,4 +2310,385 @@
     transform: none !important;
     clip-path: none !important;
   }
+}
+
+/* =========================================================
+   DEVHUB — FINAL WORKFLOW → CTA → FOOTER FIX
+   ========================================================= */
+
+/* ---------- Shared bottom-page atmosphere ---------- */
+
+.workflows {
+  position: relative;
+  z-index: 2;
+
+  max-width: 1200px;
+  margin: 0 auto;
+
+  padding:
+    clamp(64px, 9vw, 130px)
+    clamp(20px, 5vw, 72px)
+    clamp(100px, 10vw, 150px);
+
+  isolation: isolate;
+}
+
+/*
+  Full-width atmosphere behind the workflow section.
+  This uses the SAME base colour as the finale so there is
+  no section boundary when LandingFooter begins.
+*/
+.workflows::after {
+  content: "";
+  position: absolute;
+
+  z-index: -1;
+
+  left: 50%;
+  bottom: -220px;
+
+  width: 100vw;
+  height: 520px;
+
+  transform: translateX(-50%);
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      720px 300px at 50% 55%,
+      rgba(69, 151, 255, 0.055),
+      transparent 72%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(5, 11, 19, 0) 0%,
+      rgba(5, 11, 19, 0.35) 25%,
+      rgba(5, 11, 19, 0.78) 58%,
+      #050b13 100%
+    );
+}
+
+
+/* =========================================================
+   FINAL CONTINUOUS REGION
+   ========================================================= */
+
+.landing-close {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+
+  /*
+    Slightly taller than one viewport intentionally.
+    CTA gets breathing room while the footer reaches
+    the actual end of this region.
+  */
+  min-height: 100svh;
+
+  display: flex;
+  flex-direction: column;
+
+  /*
+    SAME base colour reached by workflows::after.
+    No transparent first frame = no visible seam.
+  */
+  background:
+    radial-gradient(
+      850px 440px at 50% 15%,
+      rgba(65, 145, 255, 0.065),
+      transparent 70%
+    ),
+    radial-gradient(
+      750px 500px at 83% 48%,
+      rgba(126, 103, 255, 0.035),
+      transparent 72%
+    ),
+    #050b13;
+
+  /*
+    Pull this region upward underneath the workflow
+    transition so the two regions physically overlap.
+  */
+  margin-top: -90px;
+
+  padding:
+    150px
+    clamp(14px, 4vw, 64px)
+    0;
+
+  overflow: hidden;
+}
+
+
+/*
+  Remove the previous pseudo-backgrounds.
+  They were starting exactly at the finale boundary,
+  which is why you could still see the section change.
+*/
+.landing-close::before,
+.landing-close::after {
+  content: none !important;
+}
+
+
+/* =========================================================
+   CTA
+   ========================================================= */
+
+.landing-cta {
+  position: relative;
+
+  width: 100%;
+  max-width: 760px;
+
+  /*
+    This is the important change:
+    no flex: 1 making the CTA float unpredictably.
+  */
+  flex: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  margin:
+    clamp(70px, 10vh, 120px)
+    auto
+    0;
+
+  padding:
+    clamp(28px, 4vw, 50px)
+    clamp(20px, 4vw, 48px);
+
+  text-align: center;
+
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+
+.landing-cta::before {
+  content: "";
+
+  position: absolute;
+  z-index: -1;
+
+  left: 50%;
+  top: 50%;
+
+  width: min(720px, 94vw);
+  height: 390px;
+
+  transform: translate(-50%, -50%);
+
+  pointer-events: none;
+
+  background: radial-gradient(
+    ellipse at center,
+    rgba(72, 152, 255, 0.085) 0%,
+    rgba(72, 152, 255, 0.025) 42%,
+    transparent 72%
+  );
+
+  filter: blur(2px);
+}
+
+
+/* keep CTA content above atmosphere */
+
+.landing-cta > * {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* =========================================================
+   CTA → FOOTER SPACING
+   ========================================================= */
+
+.landing-footer {
+  position: relative;
+
+  width: 100%;
+  max-width: 1200px;
+
+  /*
+    Push footer toward the REAL bottom of finale.
+  */
+  margin:
+    auto
+    auto
+    0;
+
+  padding:
+    clamp(28px, 4vw, 48px)
+    clamp(20px, 4vw, 56px)
+    28px;
+
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+
+  color: #e8eef7;
+
+  overflow: visible;
+}
+
+
+/* subtle divider instead of a block boundary */
+
+.landing-finale-divider {
+  width: 100%;
+  height: 1px;
+
+  margin:
+    0
+    auto
+    clamp(38px, 5vw, 58px);
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(130, 173, 215, 0.08) 15%,
+    rgba(148, 184, 220, 0.19) 50%,
+    rgba(130, 173, 215, 0.08) 85%,
+    transparent
+  );
+}
+
+
+/* =========================================================
+   FOOTER META — ACTUAL PAGE BOTTOM
+   ========================================================= */
+
+.landing-footer-meta {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: clamp(32px, 4vw, 44px);
+
+  padding:
+    22px
+    0
+    0;
+
+  border-top: 1px solid rgba(148, 184, 220, 0.1);
+
+  font-size: 12px;
+  color: #6e7e95;
+}
+
+
+/*
+  Remove any watermark from document layout.
+  If you restore it later, it must be absolute.
+*/
+.landing-footer-wordmark {
+  position: absolute !important;
+
+  left: 50% !important;
+  bottom: -0.3em !important;
+
+  transform: translateX(-50%) !important;
+
+  margin: 0 !important;
+
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .workflows {
+    padding-bottom: 100px;
+  }
+
+  .workflows::after {
+    bottom: -160px;
+    height: 420px;
+  }
+
+  .landing-close {
+    margin-top: -60px;
+
+    min-height: 100svh;
+
+    padding:
+      110px
+      14px
+      0;
+  }
+
+  .landing-cta {
+    margin-top: 40px;
+
+    padding:
+      28px
+      14px;
+  }
+
+  .landing-footer {
+    padding:
+      28px
+      8px
+      22px;
+  }
+
+  .landing-footer-meta {
+    align-items: flex-start;
+    flex-direction: column;
+
+    padding-top: 18px;
+  }
+}
+
+
+/* ===== SIMPLE FINAL SECTION FIX ===== */
+
+.workflows {
+  padding-bottom: 45px !important;
+}
+
+.workflows::after {
+  display: none !important;
+}
+
+.landing-close {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  background: transparent !important;
+  min-height: 100vh !important;
+}
+
+.landing-close::before,
+.landing-close::after {
+  display: none !important;
+}
+
+.landing-cta {
+  margin: 40px auto 0 !important;
+  padding: 40px 20px !important;
+  flex: none !important;
+  background: transparent !important;
+}
+
+.landing-footer {
+  margin-top: auto !important;
+  background: transparent !important;
 }

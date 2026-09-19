@@ -217,10 +217,16 @@ export function LandingExperience({
           scrub: 1,
         },
       });
+      // CTA content emerges element by element (no card, no lockup):
+      // eyebrow → headline (30px) → description (20px) → buttons (15px),
+      // small stagger, one calm climb.
       closeTl.fromTo(
-        ".landing-cta",
-        { autoAlpha: 0, y: 90, scale: 0.985 },
-        { autoAlpha: 1, y: 0, scale: 1, duration: 0.9 },
+        ".landing-cta-eyebrow, .landing-cta h2, .landing-cta-copy, .landing-cta-actions",
+        {
+          autoAlpha: 0,
+          y: (i: number) => [26, 30, 20, 15][i] ?? 20,
+        },
+        { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.09 },
         0
       );
       closeTl.fromTo(
@@ -304,9 +310,10 @@ export function LandingExperience({
               autoOrbit
               orbitSpeed={0.28}
               fontSize="clamp(2.9rem, 5.6vw, 4.8rem)"
-              fontWeight={900}
+              fontWeight={700}
               shadow
               className="hero-depth hero-enter"
+              style={{ fontFamily: "var(--font-devhub-wordmark)" }}
             />
             <h1 id="hero-title" className="hero-enter">
               Developer Intelligence for the <em>Open-Source World</em>

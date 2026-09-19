@@ -79,6 +79,9 @@ export function LandingPageShell() {
               speed={0.15}
               particleBaseSize={90}
               moveParticlesOnHover
+              // Whisper of depth only: the lerped drift caps at a few
+              // pixels. Logo, mascot, and bar never move.
+              particleHoverFactor={0.03}
               alphaParticles={false}
               disableRotation={false}
             />

@@ -15,18 +15,92 @@ const LINKS = [
  * Floating pill navbar: full pill at top, collapses on scroll to a centered
  * cat control, expands on hover/focus, tap/menu on touch.
  * One component transforming — never two navbars swapping.
+ *
+ * Scroll stability: the pill ignores jitter and tiny drifts, collapses only
+ * after ~100px of sustained downward travel (with a short settle delay so
+ * it never flickers), and re-expands quickly on upward scroll.
  */
+const TOP_ZONE_PX = 72;
+const COLLAPSE_TRAVEL_PX = 100;
+const REVEAL_TRAVEL_PX = 24;
+const JITTER_PX = 8;
+const COLLAPSE_SETTLE_MS = 150;
+
 export function LandingNav() {
   const [collapsed, setCollapsed] = useState(false);
   const [peek, setPeek] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const collapseTimer = useRef<number | null>(null);
+  const lastY = useRef(0);
+  const downTravel = useRef(0);
+  const upTravel = useRef(0);
+  const settleTimer = useRef<number | null>(null);
+  const collapsedRef = useRef(false);
+
+  const setCollapsedStable = (value: boolean) => {
+    if (collapsedRef.current === value) return;
+    collapsedRef.current = value;
+    setCollapsed(value);
+  };
+
+  const clearSettle = () => {
+    if (settleTimer.current !== null) {
+      window.clearTimeout(settleTimer.current);
+      settleTimer.current = null;
+    }
+  };
 
   useEffect(() => {
-    const onScroll = () => setCollapsed(window.scrollY > 48);
+    const onScroll = () => {
+      const y = window.scrollY;
+      const dy = y - lastY.current;
+      lastY.current = y;
+
+      // At the very top the full pill is always shown.
+      if (y <= TOP_ZONE_PX) {
+        clearSettle();
+        downTravel.current = 0;
+        upTravel.current = 0;
+        setCollapsedStable(false);
+        return;
+      }
+
+      // Ignore sub-pixel jitter / trackpad noise.
+      if (Math.abs(dy) < JITTER_PX) return;
+
+      if (dy > 0) {
+        // Scrolling down: accumulate sustained travel; a reversal below
+        // cancels the pending collapse so the pill never flickers.
+        upTravel.current = 0;
+        downTravel.current += dy;
+        if (downTravel.current >= COLLAPSE_TRAVEL_PX && !collapsedRef.current) {
+          clearSettle();
+          settleTimer.current = window.setTimeout(() => {
+            // Only collapse if the user kept moving down during the delay.
+            if (downTravel.current >= COLLAPSE_TRAVEL_PX) {
+              setCollapsedStable(true);
+            }
+            settleTimer.current = null;
+          }, COLLAPSE_SETTLE_MS);
+        }
+      } else {
+        // Scrolling up: reveal quickly after a short upward run.
+        downTravel.current = 0;
+        clearSettle();
+        upTravel.current += -dy;
+        if (upTravel.current >= REVEAL_TRAVEL_PX) {
+          setCollapsedStable(false);
+        }
+      }
+    };
+
+    lastY.current = window.scrollY;
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearSettle();
+    };
   }, []);
 
   useEffect(() => {
@@ -93,7 +167,13 @@ export function LandingNav() {
           </button>
         </div>
 
-        <Link href="/" className="landing-pill-collapsed-cat" aria-label="DevHub — show navigation">
+        <Link
+          href="/"
+          className="landing-pill-collapsed-cat"
+          aria-label="DevHub — show navigation"
+          aria-hidden={collapsed && !expanded ? undefined : true}
+          tabIndex={collapsed && !expanded ? 0 : -1}
+        >
           <DevhubCatBadge size={34} priority />
         </Link>
       </div>
