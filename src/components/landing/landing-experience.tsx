@@ -1,249 +1,699 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import {
+  Activity,
+  ArrowRight,
+  Bookmark,
+  GitCompareArrows,
+  GitFork,
+  Search,
+  Star,
+  Users,
+} from "lucide-react";
+import Particles from "@/components/particles";
 import { LandingAmbient } from "./landing-ambient";
 import { LandingNav } from "./landing-nav";
-import {
-  SignalWorld,
-  DeveloperView,
-  RepositoryView,
-  ResearchLayers,
-  ConnectedView,
-  SearchView,
-  DeveloperIntelligence,
-  TechnologyView,
-  RepositoryIntelligence,
-  ComparisonView,
-  WorkspaceView,
-  SystemView,
-  FinalView,
-} from "./landing-scenes";
+import { LandingFooter } from "./landing-footer";
+import { DevhubCatBadge } from "@/components/brand";
+import DepthText from "./depth-text";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-const story = [
+const REPOS = [
+  { name: "edge-runtime", lang: "Rust", langClass: "is-rust", status: "Active" },
+  { name: "signal-core", lang: "TypeScript", langClass: "is-ts", status: "Active" },
+  { name: "queue-lab", lang: "Go", langClass: "is-go", status: "Maintained" },
+];
+
+const LANGUAGES = [
+  { name: "Rust", note: "Primary", width: "82%", barClass: "is-rust" },
+  { name: "TypeScript", note: "Secondary", width: "58%", barClass: "is-ts" },
+  { name: "Go", note: "Secondary", width: "44%", barClass: "is-go" },
+];
+
+const PEOPLE = [
+  { initials: "S", name: "Sai", role: "Maintainer" },
+  { initials: "JL", name: "Jon Lind", role: "Contributor" },
+  { initials: "SO", name: "Sara Okafor", role: "Contributor" },
+  { initials: "RK", name: "Ravi Kumar", role: "Reviewer" },
+];
+
+// Deterministic contribution-cell intensities (0-4). No randomness.
+const CELLS = [
+  1, 3, 2, 4, 2, 3, 1, 0, 2, 3, 4, 1,
+  2, 0, 3, 1, 4, 2, 3, 4, 1, 2, 0, 3,
+  1, 4, 2, 3, 0, 2, 4, 3, 1, 2, 3, 0,
+];
+
+const BEATS = [
   {
-    eyebrow: "Open-source intelligence",
-    title: "Read the signals beneath the code.",
-    body: "GitHub contains the raw material: developers, repositories, activity, technology, and momentum. The challenge is turning that noise into understanding.",
+    eyebrow: "Raw signals",
+    title: "GitHub tells you what happened.",
+    body: "Profiles, repositories, languages, contributors, activity — accurate, but scattered across separate surfaces.",
   },
   {
-    eyebrow: "Ecosystem scale",
-    title: "Millions of developers. Millions of repositories.",
-    body: "Every project leaves traces across people, work, languages, and contribution patterns. The open-source world is enormous and alive.",
-  },
-  {
-    eyebrow: "Fragmented signals",
-    title: "The data exists. The context is scattered.",
-    body: "A profile tells one part of the story. A repo tells another. Contributors, activity, and technology are split across different surfaces and repeated explorations.",
-  },
-  {
-    eyebrow: "Developer context",
-    title: "A profile is only the surface.",
-    body: "To understand a person, you need the repositories they shape, the languages they move through, and the momentum behind their work.",
-  },
-  {
-    eyebrow: "Repository context",
-    title: "A star count is not the story.",
-    body: "It is the people, the throughput, the contributors, the languages, the changes, and the context around the code that reveal meaning.",
-  },
-  {
-    eyebrow: "Research pain",
-    title: "The work expands into tabs and tabs.",
-    body: "You keep stitching together identity, repositories, activity, and technical signals by hand, over and over again.",
-  },
-  {
-    eyebrow: "DevHub reveal",
-    title: "DevHub connects the signals.",
-    body: "Identity, code, people, technology, and momentum are no longer separate fragments. They become a continuous flow of insight.",
-  },
-  {
-    eyebrow: "Search as entry",
-    title: "Start with a name, a repo, or a question.",
-    body: "The system understands the surrounding context, not just the exact object you searched for.",
+    eyebrow: "Connected intelligence",
+    title: "DevHub helps you understand what it means.",
+    body: "Repositories attach to their developer, languages, contributors, and momentum. Relationships replace tabs.",
   },
   {
     eyebrow: "Developer intelligence",
     title: "See the full developer story.",
-    body: "Follow focus, contribution patterns, repository spread, and activity in one coherent view.",
+    body: "Focus areas, repository spread, and contribution rhythm in one coherent view — instead of stitching tabs by hand.",
   },
   {
     eyebrow: "Repository intelligence",
-    title: "See the full repository story.",
-    body: "Connect language composition, contributor behavior, stars, issues, and movement into a living picture.",
+    title: "A star count is not the story.",
+    body: "People, throughput, language mix, and momentum around the code — connected into a living picture.",
   },
   {
-    eyebrow: "Comparison",
-    title: "Compare with context, not guesswork.",
-    body: "Useful comparison needs the surrounding signals aligned side by side, not isolated metrics in a vacuum.",
+    eyebrow: "Search as entry",
+    title: "Start with a name.",
+    body: "Search developers and repositories with surrounding context attached — not just the exact object you typed.",
   },
   {
-    eyebrow: "Workspace",
-    title: "Save the work worth keeping.",
-    body: "Track the developers and repositories that matter, then return to the trail when you need it again.",
-  },
-  {
-    eyebrow: "Conclusion",
-    title: "Search less. Understand more.",
-    body: "DevHub helps you read the open-source world as an interconnected system instead of a scattered archive.",
+    eyebrow: "Compare · Save",
+    title: "Compare with context. Keep what matters.",
+    body: "Align two entities side by side — factual, no scores, no winner — and save the work worth revisiting.",
   },
 ];
 
-export function LandingExperience() {
+export function LandingExperience({
+  ready = true,
+  navSuppressed = false,
+}: {
+  ready?: boolean;
+  navSuppressed?: boolean;
+}) {
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // Remeasure triggers once the loader releases the scroll lock.
   useEffect(() => {
-    const node = rootRef.current;
-    if (!node) return;
+    if (!ready) return;
+    const t = window.setTimeout(() => ScrollTrigger.refresh(), 140);
+    return () => window.clearTimeout(t);
+  }, [ready]);
 
-    const updateNavState = () => {
-      const progress = Math.min(window.scrollY / (window.innerHeight * 0.95), 1);
-      node.style.setProperty("--nav-progress", progress.toFixed(3));
+  // One shared reveal observer for non-pinned content.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      root.querySelectorAll(".reveal").forEach((el) => el.classList.add("is-in"));
+      return;
+    }
+    const targets = root.querySelectorAll(".workflows-note");
+    if (!("IntersectionObserver" in window)) {
+      targets.forEach((el) => el.classList.add("is-in"));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-in");
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    targets.forEach((el) => io.observe(el));
+
+    // Pointer-tracked highlight for the workflow cards: one delegated
+    // listener writes --mx/--my per card; CSS paints the glow. No state.
+    const track = root.querySelector<HTMLElement>(".workflow-track");
+    const onTrackMove = (event: PointerEvent) => {
+      const card = (event.target as HTMLElement).closest?.(".workflow-step") as HTMLElement | null;
+      if (!card || !track?.contains(card)) return;
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+      card.style.setProperty("--my", `${event.clientY - rect.top}px`);
     };
+    track?.addEventListener("pointermove", onTrackMove, { passive: true });
 
-    updateNavState();
-    window.addEventListener("scroll", updateNavState, { passive: true });
-    return () => window.removeEventListener("scroll", updateNavState);
+    return () => {
+      io.disconnect();
+      track?.removeEventListener("pointermove", onTrackMove);
+    };
   }, []);
 
   useGSAP(
     () => {
-      const isReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (isReduced) return;
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduceMotion) return;
 
-      const beats = gsap.utils.toArray<HTMLElement>(".story-beat");
-      const views = gsap.utils.toArray<HTMLElement>("[data-view]");
-
-      gsap.set(beats.slice(1), { autoAlpha: 0, y: 28, filter: "blur(10px)" });
-      gsap.set(views.slice(1), { autoAlpha: 0, scale: 0.96, rotateX: 8, filter: "blur(10px)" });
-      gsap.set(".research-core", { autoAlpha: 0.85, y: 24 });
-
+      // ONE scene-level timeline: 6 beats inside a single pinned journey.
+      // Panels transform into each other (clip reveal + 0.96 → 1 scale +
+      // depth drift) instead of fading out/in as disconnected sections.
+      const scenes = gsap.utils.toArray<HTMLElement>(".j-scene");
+      const beats = gsap.utils.toArray<HTMLElement>(".j-beat");
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
-          trigger: rootRef.current,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 1.15,
+          // Start the moment the journey approaches (pin bottom reaches the
+          // viewport bottom) so the FIRST scroll already produces visible
+          // motion — no dead scroll while the hero leaves.
+          trigger: ".journey-pin",
+          start: "top bottom",
+          end: "+=640%",
+          scrub: 1.2,
         },
       });
 
-      beats.forEach((beat, index) => {
-        const at = index * 2.1;
-        if (index > 0) {
-          tl.to(beats[index - 1], { autoAlpha: 0, y: -18, filter: "blur(10px)", duration: 0.52 }, at - 0.28)
-            .fromTo(
-              beat,
-              { autoAlpha: 0, y: 28, filter: "blur(12px)" },
-              { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.7 },
-              at
-            );
-        }
-      });
-
-      views.forEach((view, index) => {
-        const at = (index + 1) * 2.2;
-        if (index > 0) {
+      scenes.forEach((scene, i) => {
+        if (i === 0) {
           tl.fromTo(
-            view,
-            { autoAlpha: 0, scale: 0.96, rotateX: 8, filter: "blur(10px)" },
-            { autoAlpha: 1, scale: 1, rotateX: 0, filter: "blur(0px)", duration: 0.7 },
-            at - 0.2
+            scene,
+            { autoAlpha: 0, scale: 0.96, y: 60 },
+            { autoAlpha: 1, scale: 1, y: 0, duration: 0.8 },
+            0
+          );
+        } else {
+          const at = 0.4 + (i - 1) * 1.15;
+          const prev = scenes[i - 1];
+          tl.to(prev, { autoAlpha: 0, scale: 0.975, y: -46, filter: "blur(8px)", duration: 0.5 }, at);
+          tl.fromTo(
+            scene,
+            { autoAlpha: 0, scale: 0.96, y: 70, clipPath: "inset(8% 4% 8% 4% round 22px)" },
+            { autoAlpha: 1, scale: 1, y: 0, clipPath: "inset(0% 0% 0% 0% round 22px)", duration: 0.65 },
+            at + 0.12
           );
         }
-        if (index < views.length - 1) {
-          tl.to(view, { autoAlpha: 0, scale: 1.04, duration: 0.6 }, at + 1.1);
+        if (i < scenes.length - 1) {
+          const hold = (i === 0 ? 0.8 : 0.4 + (i - 1) * 1.15 + 0.77) + 0.42;
+          tl.to({}, { duration: 0.42 }, hold);
         }
       });
 
-      tl.to(".research-core", { autoAlpha: 1, y: 0, duration: 0.65 }, 0.8)
-        .fromTo(".topology-path", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 2.8 }, 0.3)
-        .from(".topology-node", { scale: 0, transformOrigin: "center", stagger: 0.06, duration: 1.1 }, 0.6)
-        .to(
-          ".signal-module",
-          {
-            x: (i) => [ -110, 160, -80, 120, 40 ][i],
-            y: (i) => [ -60, 82, 110, -90, 18 ][i],
-            rotate: (i) => [ -2, 2, -1, 1, 0 ][i],
-            duration: 2,
-          },
-          3.2
-        )
-        .to(".signal-module", { x: 0, y: 0, rotate: 0, duration: 1.5, stagger: 0.05 }, 10.8)
-        .fromTo(".connection-pulse", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.8 }, 9.8)
-        .fromTo(".activity-curve", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.6 }, 16.5)
-        .to(".workspace-object", { scale: 0.9, y: -18, duration: 1.4 }, 20)
-        .from(".system-node", { y: 18, autoAlpha: 0, stagger: 0.1, duration: 1.2 }, 23.2);
+      beats.forEach((beat, i) => {
+        if (i === 0) {
+          tl.fromTo(beat, { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: 0.5 }, 0);
+        } else {
+          const at = 0.4 + (i - 1) * 1.15 + 0.1;
+          tl.to(beats[i - 1], { autoAlpha: 0, y: -20, duration: 0.35 }, at);
+          tl.fromTo(beat, { autoAlpha: 0, y: 28 }, { autoAlpha: 1, y: 0, duration: 0.45 }, at + 0.08);
+        }
+      });
 
-      const handlePointerMove = (event: PointerEvent) => {
-        if (window.innerWidth < 960) return;
-        const x = event.clientX / window.innerWidth - 0.5;
-        const y = event.clientY / window.innerHeight - 0.5;
-        gsap.to(".landing-atmosphere", { x: x * -18, y: y * -12, duration: 1.1, overwrite: "auto" });
-        gsap.to(".world-mid", { x: x * -8, y: y * -5, duration: 1.1, overwrite: "auto" });
-      };
+      // Outro removed from the pinned timeline on purpose: fading the frame
+      // to zero while the CTA still sat below the fold created a full empty
+      // viewport. The closing reveal now has its own scrubbed trigger below.
 
-      window.addEventListener("pointermove", handlePointerMove);
+      // Closing reveal: its own short scrubbed timeline across the close
+      // section's approach, so CTA + footer arrive as a continuation —
+      // layered, unhurried, never an instant pop or a hard cut.
+      const closeTl = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: ".landing-close",
+          start: "top bottom",
+          end: "top 30%",
+          scrub: 1,
+        },
+      });
+      // CTA content emerges element by element (no card, no lockup):
+      // eyebrow → headline (30px) → description (20px) → buttons (15px),
+      // small stagger, one calm climb.
+      closeTl.fromTo(
+        ".landing-cta-eyebrow, .landing-cta h2, .landing-cta-copy, .landing-cta-actions",
+        {
+          autoAlpha: 0,
+          y: (i: number) => [26, 30, 20, 15][i] ?? 20,
+        },
+        { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.09 },
+        0
+      );
+      closeTl.fromTo(
+        ".landing-footer-grid > *",
+        { autoAlpha: 0, y: 34 },
+        { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12 },
+        0.35
+      );
+      closeTl.fromTo(
+        ".landing-footer-meta",
+        { autoAlpha: 0, y: 20 },
+        { autoAlpha: 1, y: 0, duration: 0.5 },
+        0.65
+      );
+      closeTl.fromTo(
+        ".landing-footer-wordmark",
+        { yPercent: 30, autoAlpha: 0 },
+        { yPercent: 0, autoAlpha: 1, duration: 0.8 },
+        0.45
+      );
 
-      return () => {
-        window.removeEventListener("pointermove", handlePointerMove);
-      };
+      // Single lightweight pointer loop: console tilt + layered depth drift.
+      if (window.matchMedia("(pointer: fine)").matches) {
+        const console = rootRef.current?.querySelector<HTMLElement>(".hero-console");
+        const layers = gsap.utils.toArray<HTMLElement>(".hw-layer");
+        const tiltX = console
+          ? gsap.quickTo(console, "rotationX", { duration: 0.9, ease: "power2.out" })
+          : null;
+        const tiltY = console
+          ? gsap.quickTo(console, "rotationY", { duration: 0.9, ease: "power2.out" })
+          : null;
+        const onMove = (event: PointerEvent) => {
+          const x = event.clientX / window.innerWidth - 0.5;
+          const y = event.clientY / window.innerHeight - 0.5;
+          tiltX?.(-y * 5);
+          tiltY?.(x * 7);
+          layers.forEach((layer) => {
+            const depth = Number(layer.dataset.depth ?? 1);
+            gsap.to(layer, { x: x * 10 * depth, y: y * 8 * depth, duration: 1, overwrite: "auto" });
+          });
+        };
+        window.addEventListener("pointermove", onMove, { passive: true });
+        return () => window.removeEventListener("pointermove", onMove);
+      }
     },
     { scope: rootRef }
   );
 
   return (
-    <main ref={rootRef} className="landing-journey">
-      <LandingNav />
+    <div ref={rootRef} className="landing-root">
+      {!navSuppressed && <LandingNav />}
+      <LandingAmbient />
 
-      <div className="landing-stage">
-        <LandingAmbient />
-
-        <aside className="story-rail">
-          {story.map(({ eyebrow, title, body }, index) => (
-            <div className="story-beat" key={`${eyebrow}-${index}`}>
-              <span>{eyebrow}</span>
-              <h1>{title}</h1>
-              <p>{body}</p>
-            </div>
-          ))}
-        </aside>
-
-        <div className="world-mid">
-          <section className="research-core">
-            <div className="research-chrome">
-              <span />
-              <span />
-              <span />
-              <p>devhub / intelligence</p>
-            </div>
-
-            <div className="research-body">
-              <SignalWorld />
-              <div data-view="profile" className="research-view"><DeveloperView /></div>
-              <div data-view="repository" className="research-view"><RepositoryView /></div>
-              <div data-view="layers" className="research-view"><ResearchLayers /></div>
-              <div data-view="connected" className="research-view"><ConnectedView /></div>
-              <div data-view="search" className="research-view"><SearchView /></div>
-              <div data-view="developer" className="research-view"><DeveloperIntelligence /></div>
-              <div data-view="dna" className="research-view"><TechnologyView /></div>
-              <div data-view="repo-intelligence" className="research-view"><RepositoryIntelligence /></div>
-              <div data-view="comparison" className="research-view"><ComparisonView /></div>
-              <div data-view="workspace" className="research-view workspace-object"><WorkspaceView /></div>
-              <div data-view="system" className="research-view"><SystemView /></div>
-              <div data-view="final" className="research-view"><FinalView /></div>
-            </div>
-          </section>
+      {/* ================= HERO (left side preserved) ================= */}
+      <section className="hero" aria-labelledby="hero-title">
+        <div className="hero-particles" aria-hidden="true">
+          <Particles
+            particleColors={["#5ac8ff", "#8c7bff", "#ffffff"]}
+            particleCount={90}
+            particleSpread={11}
+            speed={0.08}
+            particleBaseSize={70}
+            moveParticlesOnHover={false}
+            alphaParticles
+            disableRotation={false}
+          />
         </div>
 
-        <footer className="landing-status">
-          <span>GitHub intelligence / structured signals</span>
-          <i />
-        </footer>
-      </div>
-    </main>
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <p className="hero-eyebrow hero-enter">Open-source intelligence</p>
+            <DepthText
+              text="DEVHUB"
+              layers={30}
+              depth={2.1}
+              faceColor="#f8fafc"
+              depthColor="#5b6cff"
+              tilt={6}
+              smoothing={0.14}
+              perspective={900}
+              autoOrbit
+              orbitSpeed={0.28}
+              fontSize="clamp(2.9rem, 5.6vw, 4.8rem)"
+              fontWeight={700}
+              shadow
+              className="hero-depth hero-enter"
+              style={{ fontFamily: "var(--font-devhub-wordmark)" }}
+            />
+            <h1 id="hero-title" className="hero-enter">
+              Developer Intelligence for the <em>Open-Source World</em>
+            </h1>
+            <p className="hero-lead hero-enter">
+              DevHub connects GitHub developer and repository signals — languages,
+              contributors, and activity — into intelligence you can act on.
+            </p>
+            <div className="hero-actions hero-enter">
+              <Link href="/dashboard" className="landing-primary-btn hero-cta">
+                <span>Explore DevHub</span>
+                <ArrowRight size={14} />
+              </Link>
+              <Link href="/search" className="hero-secondary">
+                <Search size={14} />
+                <span>Search GitHub</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE: one layered intelligence workspace */}
+          <div className="hero-console hero-enter" aria-label="DevHub intelligence workspace preview">
+            <div className="console-chrome">
+              <span className="chrome-dots" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+              <p>devhub / intelligence</p>
+              <span className="preview-pill">Illustrative preview</span>
+            </div>
+
+            <div className="hw-stage">
+              <svg className="hw-traces" viewBox="0 0 640 600" aria-hidden="true">
+                <path className="trace" pathLength={1} d="M120 130 C220 150 260 220 320 250" />
+                <path className="trace" pathLength={1} d="M520 150 C440 180 400 230 360 255" />
+                <path className="trace" pathLength={1} d="M180 480 C260 440 300 380 330 330" />
+                <path className="trace" pathLength={1} d="M480 470 C420 430 380 370 350 325" />
+              </svg>
+
+              <section className="hw-main hw-layer" data-depth="0.4" aria-label="Developer node">
+                <div className="hw-identity">
+                  <DevhubCatBadge size={54} priority />
+                  <div>
+                    <p className="micro-label">Developer node</p>
+                    <h3>Sai</h3>
+                    <p className="muted">@sai · Infrastructure engineer</p>
+                    <p className="muted small">Berlin, DE · Open source</p>
+                  </div>
+                  <Link href="/favourites" className="hw-save" aria-label="Save Sai">
+                    <Bookmark size={15} />
+                  </Link>
+                </div>
+                <ul className="hw-meters">
+                  <li>
+                    <Star size={13} />
+                    <span>Stars</span>
+                    <i className="meter"><b style={{ width: "78%" }} /></i>
+                  </li>
+                  <li>
+                    <GitFork size={13} />
+                    <span>Forks</span>
+                    <i className="meter"><b style={{ width: "52%" }} /></i>
+                  </li>
+                  <li>
+                    <Users size={13} />
+                    <span>Contributors</span>
+                    <i className="meter"><b style={{ width: "64%" }} /></i>
+                  </li>
+                </ul>
+                <p className="hw-live">
+                  <i className="live-dot" aria-hidden="true" /> signals linked
+                </p>
+              </section>
+
+              <section className="hw-repos hw-layer" data-depth="1" aria-label="Repository intelligence">
+                <p className="micro-label">Repository intelligence</p>
+                <ul className="repo-rows">
+                  {REPOS.map((repo) => (
+                    <li key={repo.name}>
+                      <span className={`lang-dot ${repo.langClass}`} aria-hidden="true" />
+                      <span className="repo-name">{repo.name}</span>
+                      <span className="repo-meta">
+                        {repo.lang} · {repo.status}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/search" className="hw-more">
+                  Browse repositories <ArrowRight size={12} />
+                </Link>
+              </section>
+
+              <section className="hw-langs hw-layer" data-depth="0.7" aria-label="Language signals">
+                <p className="micro-label">Language signals</p>
+                <ul className="lang-bars">
+                  {LANGUAGES.map((lang) => (
+                    <li key={lang.name}>
+                      <span className="lang-name">{lang.name}</span>
+                      <i className="lang-bar">
+                        <b className={lang.barClass} style={{ width: lang.width }} />
+                      </i>
+                      <span className="lang-note">{lang.note}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="hw-activity hw-layer" data-depth="1.3" aria-label="Activity">
+                <div className="hw-activity-head">
+                  <p className="micro-label">Activity</p>
+                  <Activity size={13} />
+                </div>
+                <div className="contrib-grid" aria-hidden="true">
+                  {CELLS.map((level, i) => (
+                    <i key={i} data-level={level} />
+                  ))}
+                </div>
+                <svg className="spark hw-spark" viewBox="0 0 260 64" aria-hidden="true">
+                  <path
+                    className="hw-spark-line"
+                    pathLength={1}
+                    d="M4 54 C40 52 48 18 82 32 S130 56 156 26 S206 10 256 20"
+                  />
+                </svg>
+                <p className="muted small">Contribution rhythm across tracked work</p>
+              </section>
+
+              <section className="hw-people hw-layer" data-depth="1.6" aria-label="Relationships">
+                <p className="micro-label">Relationships</p>
+                <ul>
+                  {PEOPLE.map((person, i) => (
+                    <li key={person.initials} style={{ animationDelay: `${i * 0.7}s` }}>
+                      <b aria-hidden="true">{person.initials}</b>
+                      <span>
+                        <strong>{person.name}</strong>
+                        <small>{person.role}</small>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      {/* ================= CINEMATIC JOURNEY (one pinned frame, 6 beats) ================= */}
+      <section className="journey" aria-label="From signals to intelligence">
+        <div className="journey-pin">
+          <div className="journey-stage">
+            <div className="j-copy">
+              {BEATS.map((beat, i) => (
+                <div className="j-beat" data-beat={i} key={beat.eyebrow}>
+                  <span>{beat.eyebrow}</span>
+                  <h2>{beat.title}</h2>
+                  <p>{beat.body}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="j-frame" aria-hidden="true">
+              <div className="console-chrome">
+                <span className="chrome-dots">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <p>devhub / intelligence</p>
+                <span className="preview-pill">Illustrative preview</span>
+              </div>
+
+              <div className="j-scenes">
+                <div className="j-scene" data-scene="0">
+                  <div className="j-chips">
+                    {[
+                      ["Profile", "Sai"],
+                      ["Repository", "edge-runtime"],
+                      ["Languages", "Rust · TypeScript"],
+                      ["Contributors", "People behind the code"],
+                      ["Activity", "Momentum & trends"],
+                    ].map(([label, value]) => (
+                      <div className="j-chip" key={label}>
+                        <p className="micro-label">{label}</p>
+                        <strong>{value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="j-scene" data-scene="1">
+                  <div className="j-chips converged">
+                    {[
+                      ["Profile", "Sai"],
+                      ["Repository", "edge-runtime"],
+                      ["Languages", "Rust · TypeScript"],
+                      ["Contributors", "People behind the code"],
+                      ["Activity", "Momentum & trends"],
+                    ].map(([label, value]) => (
+                      <div className="j-chip" key={label}>
+                        <p className="micro-label">{label}</p>
+                        <strong>{value}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="j-scene" data-scene="2">
+                  <div className="j-dev">
+                    <div className="j-dev-head">
+                      <DevhubCatBadge size={44} />
+                      <div>
+                        <p className="micro-label">Developer intelligence</p>
+                        <h3>Sai</h3>
+                        <p className="muted">@sai · Infrastructure and distributed systems</p>
+                      </div>
+                    </div>
+                    <div className="focus-pills">
+                      {["Distributed systems", "Edge runtimes", "Developer tooling"].map((tag) => (
+                        <span key={tag}>{tag}</span>
+                      ))}
+                    </div>
+                    <ul className="repo-rows lined">
+                      {REPOS.map((repo) => (
+                        <li key={repo.name}>
+                          <span className={`lang-dot ${repo.langClass}`} />
+                          <span className="repo-name">{repo.name}</span>
+                          <span className="repo-meta">
+                            {repo.lang} · {repo.status}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="j-scene" data-scene="3">
+                  <div className="j-repo">
+                    <p className="micro-label">Repository intelligence</p>
+                    <h3>edge-runtime</h3>
+                    <p className="muted">Runtime primitives for edge servers</p>
+                    <p className="micro-label push">Language composition</p>
+                    <ul className="lang-bars">
+                      {LANGUAGES.map((lang) => (
+                        <li key={lang.name}>
+                          <span className="lang-name">{lang.name}</span>
+                          <i className="lang-bar">
+                            <b className={lang.barClass} style={{ width: lang.width }} />
+                          </i>
+                          <span className="lang-note">{lang.note}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <ul className="people-rows cols-4">
+                      {PEOPLE.map((person) => (
+                        <li key={person.initials}>
+                          <b>{person.initials}</b>
+                          <span>
+                            <strong>{person.name}</strong>
+                            <small>{person.role}</small>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="j-scene" data-scene="4">
+                  <div className="j-search">
+                    <p className="micro-label">Search developers and repositories</p>
+                    <div className="j-search-input">
+                      <Search size={16} />
+                      <span>sai</span>
+                      <i className="caret" />
+                    </div>
+                    <ul className="j-results">
+                      <li>
+                        <b>S</b>
+                        <span>
+                          <strong>Sai</strong>
+                          <small>@sai · Infrastructure engineer</small>
+                        </span>
+                        <ArrowRight size={14} />
+                      </li>
+                      <li>
+                        <span className={`lang-dot is-rust`} />
+                        <span>
+                          <strong>edge-runtime</strong>
+                          <small>Rust · Maintained by Sai</small>
+                        </span>
+                        <ArrowRight size={14} />
+                      </li>
+                    </ul>
+                    <p className="muted small">Illustrative matches — live results in the app</p>
+                  </div>
+                </div>
+
+                <div className="j-scene" data-scene="5">
+                  <div className="j-compare">
+                    <div className="j-side">
+                      <p className="micro-label">edge-runtime</p>
+                      <strong>Sai</strong>
+                      <ul>
+                        <li>Rust · Primary</li>
+                        <li>Status · Active</li>
+                      </ul>
+                    </div>
+                    <div className="j-vs">
+                      <GitCompareArrows size={16} />
+                    </div>
+                    <div className="j-side">
+                      <p className="micro-label">signal-core</p>
+                      <strong>Sai</strong>
+                      <ul>
+                        <li>TypeScript · Primary</li>
+                        <li>Status · Active</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <p className="j-nobanner">Side-by-side context — no scores, no winner</p>
+                  <p className="j-saved">
+                    <Bookmark size={13} /> Saved to favourites
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= WORKFLOWS (real routes) ================= */}
+      <section className="workflows" aria-labelledby="workflows-title">
+        <div className="workflows-head">
+          <span>Search · Save · Compare</span>
+          <h2 id="workflows-title">Continue in the product.</h2>
+          <p>The story above is the workspace. These are its doors.</p>
+        </div>
+        <ol className="workflow-track">
+          <li className="workflow-step">
+            <span className="workflow-icon">
+              <Search size={16} />
+            </span>
+            <div>
+              <h3>Search</h3>
+              <p>Developers and repositories with context attached.</p>
+              <Link href="/search" className="story-link">
+                Open search <ArrowRight size={13} />
+              </Link>
+            </div>
+          </li>
+          <li className="workflow-step">
+            <span className="workflow-icon">
+              <Bookmark size={16} />
+            </span>
+            <div>
+              <h3>Save</h3>
+              <p>Keep developers and repositories on a watchlist.</p>
+              <Link href="/favourites" className="story-link">
+                Open saved <ArrowRight size={13} />
+              </Link>
+            </div>
+          </li>
+          <li className="workflow-step">
+            <span className="workflow-icon">
+              <GitCompareArrows size={16} />
+            </span>
+            <div>
+              <h3>Compare</h3>
+              <p>Align signals side by side — factual, no winner.</p>
+              <Link href="/compare" className="story-link">
+                Open compare <ArrowRight size={13} />
+              </Link>
+            </div>
+          </li>
+        </ol>
+        <p className="workflows-note reveal">Every step reads from the same connected signals.</p>
+      </section>
+
+      <LandingFooter />
+    </div>
   );
 }

@@ -122,6 +122,11 @@ export default function Particles({
 }: ParticlesProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mouseRef = useRef({ x: 0, y: 0 });
+  // Lerped copy of the cursor target: the star field drifts a few pixels
+  // behind the pointer and settles when the cursor stops — never a
+  // camera-follow effect. Kept in a ref so no re-renders occur.
+  const driftRef = useRef({ x: 0, y: 0 });
+  const reduceMotionRef = useRef(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -157,6 +162,8 @@ export default function Particles({
 
     window.addEventListener("resize", resize, false);
     resize();
+
+    reduceMotionRef.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (moveParticlesOnHover) {
       container.addEventListener("mousemove", handleMouseMove);
@@ -222,9 +229,15 @@ export default function Particles({
 
       program.uniforms.uTime.value = elapsed * 0.001;
 
-      if (moveParticlesOnHover) {
-        particles.position.x = -mouseRef.current.x * particleHoverFactor;
-        particles.position.y = -mouseRef.current.y * particleHoverFactor;
+      if (moveParticlesOnHover && !reduceMotionRef.current) {
+        // Ease the drift toward the cursor target each frame: smooth
+        // atmospheric depth that settles naturally when the cursor stops.
+        const target = mouseRef.current;
+        const drift = driftRef.current;
+        drift.x += (target.x - drift.x) * 0.055;
+        drift.y += (target.y - drift.y) * 0.055;
+        particles.position.x = -drift.x * particleHoverFactor;
+        particles.position.y = -drift.y * particleHoverFactor;
       } else {
         particles.position.x = 0;
         particles.position.y = 0;

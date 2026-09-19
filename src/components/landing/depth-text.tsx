@@ -1,113 +1,146 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 
 type DepthTextProps = {
-  text: string;
+  text?: string;
   layers?: number;
   depth?: number;
   faceColor?: string;
   depthColor?: string;
   tilt?: number;
-  perspective?: number;
-  autoOrbit?: number;
+  pointerTracking?: boolean;
   smoothing?: number;
+  perspective?: number;
+  autoOrbit?: boolean;
+  orbitSpeed?: number;
+  fontSize?: string;
+  fontWeight?: number | string;
+  shadow?: boolean;
+  className?: string;
+  style?: CSSProperties;
 };
 
-export function DepthText({
-  text,
-  layers = 30,
-  depth = 2.2,
+/**
+ * React Bits DepthText adapted for DevHub hero use only.
+ * Layered extrusion + subtle pointer tilt + idle orbit + reduced-motion
+ * fallback. Keep off body copy, cards, tables and section headings.
+ */
+export default function DepthText({
+  text = "Elevate",
+  layers = 34,
+  depth = 2.4,
   faceColor = "#f8fafc",
   depthColor = "#7c3aed",
   tilt = 7.5,
-  perspective = 900,
-  autoOrbit = 0.5,
+  pointerTracking = true,
   smoothing = 0.14,
+  perspective = 900,
+  autoOrbit = true,
+  orbitSpeed = 0.35,
+  fontSize = "clamp(3rem, 12vw, 7rem)",
+  fontWeight = 900,
+  shadow = true,
+  className = "",
+  style,
 }: DepthTextProps) {
-  const targetRef = useRef<HTMLDivElement>(null);
-  const outerRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const innerRef = useRef<HTMLDivElement | null>(null);
+  const target = useRef({ x: 0, y: 0 });
+  const current = useRef({ x: 0, y: 0 });
 
-  const shadows = useMemo(() => {
-    const parts: string[] = [];
-    for (let i = 1; i <= layers; i += 1) {
-      const offset = i * depth;
-      const alpha = Math.max(0, 1 - i / (layers + 4));
-      parts.push(
-        `${offset}px ${offset * 0.92}px 0 ${shade(depthColor, alpha)}`,
-      );
-    }
-    return parts.join(", ");
-  }, [layers, depth, depthColor]);
+  const safeLayers = Math.max(2, Math.min(60, Math.round(layers)));
 
   useEffect(() => {
-    const outer = outerRef.current;
-    const el = targetRef.current;
-    if (!outer || !el) return;
+    const wrap = wrapRef.current;
+    const inner = innerRef.current;
+    if (!wrap || !inner) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
+    if (reduceMotion) return;
 
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    if (reduced) {
-      el.style.transform = `rotateX(${tilt}deg)`;
-      return;
-    }
-
-    let orby = 0;
-    let pointerY = 0;
     let raf = 0;
+    let orbitT = 0;
     let last = performance.now();
+    let hovering = false;
 
-    const onMove = (event: PointerEvent) => {
-      const rect = outer.getBoundingClientRect();
-      pointerY = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+    const onMove = (e: PointerEvent) => {
+      const r = wrap.getBoundingClientRect();
+      target.current.x = ((e.clientX - r.left) / r.width - 0.5) * 2;
+      target.current.y = ((e.clientY - r.top) / r.height - 0.5) * 2;
+      hovering = true;
     };
-
     const onLeave = () => {
-      pointerY = 0;
+      hovering = false;
+      target.current.x = 0;
+      target.current.y = 0;
     };
 
-    const loop = (now: number) => {
-      const dt = Math.min(1, (now - last) / 1000);
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const idle = Math.sin(now / 900) * autoOrbit;
-      const wobble = idle + pointerY * tilt * 0.9;
-      orby += (wobble - orby) * (1 - Math.pow(1 - smoothing, dt * 60));
-      el.style.transform = `rotateX(${tilt}deg) rotateY(${orby.toFixed(3)}deg)`;
-      raf = requestAnimationFrame(loop);
+      if (autoOrbit && (!hovering || !pointerTracking)) {
+        orbitT += dt * orbitSpeed * Math.PI * 2;
+        target.current.x = Math.cos(orbitT) * 0.35;
+        target.current.y = Math.sin(orbitT * 0.8) * 0.28;
+      }
+      current.current.x += (target.current.x - current.current.x) * smoothing * 4;
+      current.current.y += (target.current.y - current.current.y) * smoothing * 4;
+      const rx = (-current.current.y * tilt).toFixed(3);
+      const ry = (current.current.x * tilt).toFixed(3);
+      inner.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
     };
+    raf = requestAnimationFrame(tick);
 
-    outer.addEventListener("pointermove", onMove);
-    outer.addEventListener("pointerleave", onLeave);
-    raf = requestAnimationFrame(loop);
-
+    if (pointerTracking && finePointer) {
+      wrap.addEventListener("pointermove", onMove);
+      wrap.addEventListener("pointerleave", onLeave);
+    }
     return () => {
-      outer.removeEventListener("pointermove", onMove);
-      outer.removeEventListener("pointerleave", onLeave);
       cancelAnimationFrame(raf);
+      wrap.removeEventListener("pointermove", onMove);
+      wrap.removeEventListener("pointerleave", onLeave);
     };
-  }, [tilt, autoOrbit, smoothing]);
+  }, [pointerTracking, smoothing, tilt, autoOrbit, orbitSpeed]);
+
+  const back = Array.from({ length: safeLayers - 1 }, (_, i) => {
+    const t = (i + 1) / safeLayers;
+    return (
+      <span
+        key={i}
+        aria-hidden="true"
+        className="depth-text-layer"
+        style={{
+          transform: `translateZ(${-((i + 1) * depth).toFixed(2)}px)`,
+          color: depthColor,
+          opacity: 0.28 + t * 0.5,
+        }}
+      >
+        {text}
+      </span>
+    );
+  });
 
   return (
-    <div ref={outerRef} style={{ perspective }} className="depth-text">
-      <div ref={targetRef} className="depth-text__inner" style={{ transformStyle: "preserve-3d" }}>
+    <div
+      ref={wrapRef}
+      className={`depth-text ${className}`.trim()}
+      style={{ perspective: `${perspective}px`, ...style }}
+    >
+      <div ref={innerRef} className="depth-text-inner" style={{ fontSize, fontWeight }}>
+        {back}
         <span
-          className="depth-text__glyph"
-          style={{ color: faceColor, textShadow: shadows }}
+          className="depth-text-face"
+          style={{
+            color: faceColor,
+            textShadow: shadow ? `0 18px 60px ${depthColor}55, 0 2px 0 rgba(255,255,255,0.25)` : undefined,
+          }}
         >
           {text}
         </span>
       </div>
+      <span className="sr-only">{text}</span>
     </div>
   );
-}
-
-function shade(hex: string, alpha: number) {
-  const value = hex.replace("#", "");
-  const full = value.length === 3 ? value.split("").map((v) => v + v).join("") : value;
-  const r = parseInt(full.slice(0, 2), 16);
-  const g = parseInt(full.slice(2, 4), 16);
-  const b = parseInt(full.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
 }

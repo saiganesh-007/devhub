@@ -194,16 +194,21 @@ html {
   scroll-behavior: smooth;
   margin: 0;
   width: 100%;
+  height: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
-  background: var(--bg-0);
-  color: var(--ink);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  background: #05080f;
+  color: var(--foreground);
+  font-family: Arial, var(--font-geist-sans), sans-serif;
+}
+
+/* Locked only while the fullscreen loader is active. The loader shell
+   toggles this class so normal landing/app scrolling is never frozen. */
+body.devhub-loader-locked {
+  overflow: hidden;
 }
 
 * {

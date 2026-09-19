@@ -1,72 +1,95 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Particles from "@/components/particles";
 import { LandingExperience } from "@/components/landing/landing-experience";
 import { LandingLoader } from "@/components/landing/landing-loader";
 
-const SESSION_KEY = "devhub-landing-seen";
+const SEEN_KEY = "devhub:loader-seen-v1";
 
-const emptySubscribe = () => () => {};
-
-function useHasSeenLanding() {
-  return useSyncExternalStore(
-    emptySubscribe,
-    () => {
-      try {
-        return Boolean(sessionStorage.getItem(SESSION_KEY));
-      } catch {
-        return false;
-      }
-    },
-    () => false,
-  );
+function shouldSkipLoader(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    // Hard reloads should still show the designed loader; SPA navigation
+    // back to "/" within the same tab should not replay it.
+    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    if (nav?.type === "reload") return false;
+    return window.sessionStorage.getItem(SEEN_KEY) === "1";
+  } catch {
+    return false;
+  }
 }
 
 export function LandingPageShell() {
-  const hasSeen = useHasSeenLanding();
-  const [dismissed, setDismissed] = useState(false);
-  const [stagedGone, setStagedGone] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [overlayVisible, setOverlayVisible] = useState(true);
+  const [overlayLeaving, setOverlayLeaving] = useState(false);
 
-  const landingReady = hasSeen || dismissed;
-  const overlayGone = hasSeen || stagedGone;
+  useEffect(() => {
+    // Defer past first paint so the server-rendered loader matches hydration,
+    // then skip replay for in-session SPA navigation back to "/".
+    const id = window.setTimeout(() => {
+      if (shouldSkipLoader()) {
+        setLoading(false);
+        setOverlayVisible(false);
+      }
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, []);
 
-  const handleLoaderComplete = useCallback(() => {
+  // Lock scroll only while the loader covers the page. Landing scrolls
+  // normally the moment the loader starts leaving.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.classList.toggle("devhub-loader-locked", loading);
+    return () => document.body.classList.remove("devhub-loader-locked");
+  }, [loading]);
+
+  const handleComplete = useCallback(() => {
     try {
-      sessionStorage.setItem(SESSION_KEY, "1");
+      window.sessionStorage.setItem(SEEN_KEY, "1");
     } catch {
-      // ignore storage failures
+      // Session guard is best-effort; loader still exits cleanly.
     }
-    setDismissed(true);
-    window.setTimeout(() => setStagedGone(true), 700);
+    // Start the crossfade: landing is already painted underneath, so there
+    // is no flash. Unmount the overlay after the CSS exit finishes.
+    setOverlayLeaving(true);
+    setLoading(false);
+    window.setTimeout(() => setOverlayVisible(false), 650);
   }, []);
 
   return (
-    <main className="devhub-loader-shell" aria-label="DevHub landing">
-      <div className={`landing-page-behind ${landingReady ? "is-visible" : ""}`}>
-        <LandingExperience />
+    <div className="devhub-loader-shell">
+      <div
+        className={`landing-page ${loading ? "is-loading" : "is-ready"}`}
+        aria-hidden={loading}
+        // Prevent keyboard focus landing underneath the opaque loader.
+        inert={loading ? true : undefined}
+      >
+        <LandingExperience ready={!loading} navSuppressed={loading} />
       </div>
 
-      {!overlayGone && (
-        <div
-          className={`landing-loader-overlay ${landingReady ? "is-hiding" : ""}`}
-        >
-          <div className="landing-loader-particles">
+      {overlayVisible ? (
+        <div className={`landing-loader-overlay ${overlayLeaving ? "is-leaving" : ""}`} aria-hidden={!loading}>
+          <div className="landing-loader-particles" aria-hidden="true">
             <Particles
               particleColors={["#5ac8ff", "#8c7bff", "#ffffff"]}
-              particleCount={140}
+              particleCount={180}
               particleSpread={10}
-              speed={0.12}
+              speed={0.15}
               particleBaseSize={90}
-              moveParticlesOnHover={true}
+              moveParticlesOnHover
+              // Whisper of depth only: the lerped drift caps at a few
+              // pixels. Logo, mascot, and bar never move.
+              particleHoverFactor={0.03}
               alphaParticles={false}
               disableRotation={false}
             />
           </div>
 
-          <LandingLoader onComplete={handleLoaderComplete} />
+          {loading ? <LandingLoader onComplete={handleComplete} /> : null}
         </div>
-      )}
-    </main>
+      ) : null}
+    </div>
   );
 }
