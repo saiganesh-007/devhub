@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { DepthText } from "@/components/landing/depth-text";
+import DepthText from "@/components/landing/depth-text";
 
 export function LandingHero() {
   return (
@@ -16,7 +16,7 @@ export function LandingHero() {
           depthColor="#7c3aed"
           tilt={7.5}
           perspective={900}
-          autoOrbit={0.6}
+          autoOrbit={true}
           smoothing={0.14}
         />
       </div>
