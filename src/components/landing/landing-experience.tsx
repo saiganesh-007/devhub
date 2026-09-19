@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ArrowRight } from "lucide-react";
 import { LandingAmbient } from "./landing-ambient";
 import { LandingNav } from "./landing-nav";
+import { LandingFooter } from "./landing-footer";
+import DepthText from "./depth-text";
 import {
   SignalWorld,
   DeveloperView,
@@ -92,22 +96,16 @@ const story = [
   },
 ];
 
-export function LandingExperience() {
+export function LandingExperience({ ready = true }: { ready?: boolean }) {
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // Remeasure the pinned scrub once the loader releases the scroll lock so
+  // scene handoffs stay aligned with the real page height.
   useEffect(() => {
-    const node = rootRef.current;
-    if (!node) return;
-
-    const updateNavState = () => {
-      const progress = Math.min(window.scrollY / (window.innerHeight * 0.95), 1);
-      node.style.setProperty("--nav-progress", progress.toFixed(3));
-    };
-
-    updateNavState();
-    window.addEventListener("scroll", updateNavState, { passive: true });
-    return () => window.removeEventListener("scroll", updateNavState);
-  }, []);
+    if (!ready) return;
+    const t = window.setTimeout(() => ScrollTrigger.refresh(), 120);
+    return () => window.clearTimeout(t);
+  }, [ready]);
 
   useGSAP(
     () => {
@@ -124,7 +122,7 @@ export function LandingExperience() {
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
-          trigger: rootRef.current,
+          trigger: ".landing-pin",
           start: "top top",
           end: "bottom bottom",
           scrub: 1.15,
@@ -196,54 +194,93 @@ export function LandingExperience() {
   );
 
   return (
-    <main ref={rootRef} className="landing-journey">
+    <div ref={rootRef} className="landing-root">
       <LandingNav />
 
-      <div className="landing-stage">
-        <LandingAmbient />
+      <div className="landing-journey">
+        <div className="landing-pin">
+          <div className="landing-stage">
+            <LandingAmbient />
 
-        <aside className="story-rail">
-          {story.map(({ eyebrow, title, body }, index) => (
-            <div className="story-beat" key={`${eyebrow}-${index}`}>
-              <span>{eyebrow}</span>
-              <h1>{title}</h1>
-              <p>{body}</p>
-            </div>
-          ))}
-        </aside>
+            <aside className="story-rail" aria-label="DevHub story">
+              {story.map(({ eyebrow, title, body }, index) =>
+                index === 0 ? (
+                  <div className="story-beat story-beat-hero" key={`${eyebrow}-${index}`}>
+                    <span>{eyebrow}</span>
+                    <DepthText
+                      text="DEVHUB"
+                      layers={30}
+                      depth={2.1}
+                      faceColor="#f8fafc"
+                      depthColor="#5b6cff"
+                      tilt={6}
+                      smoothing={0.14}
+                      perspective={900}
+                      autoOrbit
+                      orbitSpeed={0.28}
+                      fontSize="clamp(3.2rem, 7vw, 6.2rem)"
+                      fontWeight={900}
+                      shadow
+                      className="hero-depth"
+                    />
+                    <h1>{title}</h1>
+                    <p>{body}</p>
+                    <div className="hero-actions">
+                      <Link href="/dashboard" className="landing-primary-btn">
+                        <span>Explore DevHub</span>
+                        <ArrowRight size={13} />
+                      </Link>
+                      <Link href="/search" className="hero-secondary">
+                        Search GitHub
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="story-beat" key={`${eyebrow}-${index}`}>
+                    <span>{eyebrow}</span>
+                    <h2>{title}</h2>
+                    <p>{body}</p>
+                  </div>
+                )
+              )}
+            </aside>
 
-        <div className="world-mid">
-          <section className="research-core">
-            <div className="research-chrome">
-              <span />
-              <span />
-              <span />
-              <p>devhub / intelligence</p>
+            <div className="world-mid">
+              <section className="research-core" aria-label="DevHub product views">
+                <div className="research-chrome">
+                  <span />
+                  <span />
+                  <span />
+                  <p>devhub / intelligence</p>
+                </div>
+
+                <div className="research-body">
+                  <SignalWorld />
+                  <div data-view="profile" className="research-view"><DeveloperView /></div>
+                  <div data-view="repository" className="research-view"><RepositoryView /></div>
+                  <div data-view="layers" className="research-view"><ResearchLayers /></div>
+                  <div data-view="connected" className="research-view"><ConnectedView /></div>
+                  <div data-view="search" className="research-view"><SearchView /></div>
+                  <div data-view="developer" className="research-view"><DeveloperIntelligence /></div>
+                  <div data-view="dna" className="research-view"><TechnologyView /></div>
+                  <div data-view="repo-intelligence" className="research-view"><RepositoryIntelligence /></div>
+                  <div data-view="comparison" className="research-view"><ComparisonView /></div>
+                  <div data-view="workspace" className="research-view workspace-object"><WorkspaceView /></div>
+                  <div data-view="system" className="research-view"><SystemView /></div>
+                  <div data-view="final" className="research-view"><FinalView /></div>
+                </div>
+              </section>
             </div>
 
-            <div className="research-body">
-              <SignalWorld />
-              <div data-view="profile" className="research-view"><DeveloperView /></div>
-              <div data-view="repository" className="research-view"><RepositoryView /></div>
-              <div data-view="layers" className="research-view"><ResearchLayers /></div>
-              <div data-view="connected" className="research-view"><ConnectedView /></div>
-              <div data-view="search" className="research-view"><SearchView /></div>
-              <div data-view="developer" className="research-view"><DeveloperIntelligence /></div>
-              <div data-view="dna" className="research-view"><TechnologyView /></div>
-              <div data-view="repo-intelligence" className="research-view"><RepositoryIntelligence /></div>
-              <div data-view="comparison" className="research-view"><ComparisonView /></div>
-              <div data-view="workspace" className="research-view workspace-object"><WorkspaceView /></div>
-              <div data-view="system" className="research-view"><SystemView /></div>
-              <div data-view="final" className="research-view"><FinalView /></div>
-            </div>
-          </section>
+            <footer className="landing-status">
+              <span>GitHub intelligence / structured signals</span>
+              <i />
+            </footer>
+          </div>
         </div>
-
-        <footer className="landing-status">
-          <span>GitHub intelligence / structured signals</span>
-          <i />
-        </footer>
       </div>
-    </main>
+
+      <LandingFooter />
+    </div>
   );
 }

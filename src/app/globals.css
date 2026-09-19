@@ -18,7 +18,6 @@ html {
   margin: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
 }
 
 body {
@@ -27,6 +26,11 @@ body {
   background: #05080f;
   color: var(--foreground);
   font-family: Arial, var(--font-geist-sans), sans-serif;
+}
+
+/* Locked only while the fullscreen loader is active. The loader shell
+   toggles this class so normal landing/app scrolling is never frozen. */
+body.devhub-loader-locked {
   overflow: hidden;
 }
 
