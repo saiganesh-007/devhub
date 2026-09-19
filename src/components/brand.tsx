@@ -70,6 +70,8 @@ export function DevhubCatBadge({ size = 32, priority = false }: { size?: number;
       />
     </span>
   );
+}
+
 export function LogoFallback() {
   return (
     <span className="grid size-7 place-items-center rounded-md border border-sky-400/35 bg-sky-400/10 text-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.2)]">
