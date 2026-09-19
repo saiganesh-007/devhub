@@ -12,7 +12,6 @@ import {
   GitCompareArrows,
   GitFork,
   Search,
-  Share2,
   Star,
   Users,
 } from "lucide-react";
@@ -38,7 +37,7 @@ const LANGUAGES = [
 ];
 
 const PEOPLE = [
-  { initials: "AR", name: "Ada Reyes", role: "Maintainer" },
+  { initials: "S", name: "Sai", role: "Maintainer" },
   { initials: "JL", name: "Jon Lind", role: "Contributor" },
   { initials: "SO", name: "Sara Okafor", role: "Contributor" },
   { initials: "RK", name: "Ravi Kumar", role: "Reviewer" },
@@ -125,7 +124,23 @@ export function LandingExperience({
       { threshold: 0.3 }
     );
     targets.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+
+    // Pointer-tracked highlight for the workflow cards: one delegated
+    // listener writes --mx/--my per card; CSS paints the glow. No state.
+    const track = root.querySelector<HTMLElement>(".workflow-track");
+    const onTrackMove = (event: PointerEvent) => {
+      const card = (event.target as HTMLElement).closest?.(".workflow-step") as HTMLElement | null;
+      if (!card || !track?.contains(card)) return;
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+      card.style.setProperty("--my", `${event.clientY - rect.top}px`);
+    };
+    track?.addEventListener("pointermove", onTrackMove, { passive: true });
+
+    return () => {
+      io.disconnect();
+      track?.removeEventListener("pointermove", onTrackMove);
+    };
   }, []);
 
   useGSAP(
@@ -146,7 +161,7 @@ export function LandingExperience({
           // motion — no dead scroll while the hero leaves.
           trigger: ".journey-pin",
           start: "top bottom",
-          end: "+=760%",
+          end: "+=640%",
           scrub: 1.2,
         },
       });
@@ -186,36 +201,45 @@ export function LandingExperience({
         }
       });
 
-      tl.fromTo(".j-hub", { scale: 0.7, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.6 }, 1.2);
+      // Outro removed from the pinned timeline on purpose: fading the frame
+      // to zero while the CTA still sat below the fold created a full empty
+      // viewport. The closing reveal now has its own scrubbed trigger below.
 
-      // Outro: the product frame recedes inside the SAME scrubbed timeline
-      // while the final CTA + footer reveal as one continuous flow — never a
-      // hard cut from cinematic scrub to static page scroll.
-      tl.to(".j-frame", { autoAlpha: 0, scale: 0.96, y: -60, filter: "blur(10px)", duration: 0.7 }, 6.0);
-      tl.to(".j-copy", { autoAlpha: 0, y: -30, duration: 0.6 }, 6.0);
-      tl.fromTo(
+      // Closing reveal: its own short scrubbed timeline across the close
+      // section's approach, so CTA + footer arrive as a continuation —
+      // layered, unhurried, never an instant pop or a hard cut.
+      const closeTl = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: ".landing-close",
+          start: "top bottom",
+          end: "top 30%",
+          scrub: 1,
+        },
+      });
+      closeTl.fromTo(
         ".landing-cta",
         { autoAlpha: 0, y: 90, scale: 0.985 },
         { autoAlpha: 1, y: 0, scale: 1, duration: 0.9 },
-        6.15
+        0
       );
-      tl.fromTo(
+      closeTl.fromTo(
         ".landing-footer-grid > *",
         { autoAlpha: 0, y: 34 },
         { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12 },
-        6.5
+        0.35
       );
-      tl.fromTo(
+      closeTl.fromTo(
         ".landing-footer-meta",
         { autoAlpha: 0, y: 20 },
         { autoAlpha: 1, y: 0, duration: 0.5 },
-        6.8
+        0.65
       );
-      tl.fromTo(
+      closeTl.fromTo(
         ".landing-footer-wordmark",
         { yPercent: 30, autoAlpha: 0 },
         { yPercent: 0, autoAlpha: 1, duration: 0.8 },
-        6.6
+        0.45
       );
 
       // Single lightweight pointer loop: console tilt + layered depth drift.
@@ -328,11 +352,11 @@ export function LandingExperience({
                   <DevhubCatBadge size={54} priority />
                   <div>
                     <p className="micro-label">Developer node</p>
-                    <h3>Ada Reyes</h3>
-                    <p className="muted">@ada · Infrastructure engineer</p>
+                    <h3>Sai</h3>
+                    <p className="muted">@sai · Infrastructure engineer</p>
                     <p className="muted small">Berlin, DE · Open source</p>
                   </div>
-                  <Link href="/favourites" className="hw-save" aria-label="Save Ada Reyes">
+                  <Link href="/favourites" className="hw-save" aria-label="Save Sai">
                     <Bookmark size={15} />
                   </Link>
                 </div>
@@ -460,7 +484,7 @@ export function LandingExperience({
                 <div className="j-scene" data-scene="0">
                   <div className="j-chips">
                     {[
-                      ["Profile", "Ada Reyes"],
+                      ["Profile", "Sai"],
                       ["Repository", "edge-runtime"],
                       ["Languages", "Rust · TypeScript"],
                       ["Contributors", "People behind the code"],
@@ -475,12 +499,9 @@ export function LandingExperience({
                 </div>
 
                 <div className="j-scene" data-scene="1">
-                  <div className="j-hub">
-                    <Share2 size={22} />
-                  </div>
                   <div className="j-chips converged">
                     {[
-                      ["Profile", "Ada Reyes"],
+                      ["Profile", "Sai"],
                       ["Repository", "edge-runtime"],
                       ["Languages", "Rust · TypeScript"],
                       ["Contributors", "People behind the code"],
@@ -500,8 +521,8 @@ export function LandingExperience({
                       <DevhubCatBadge size={44} />
                       <div>
                         <p className="micro-label">Developer intelligence</p>
-                        <h3>Ada Reyes</h3>
-                        <p className="muted">@ada · Infrastructure and distributed systems</p>
+                        <h3>Sai</h3>
+                        <p className="muted">@sai · Infrastructure and distributed systems</p>
                       </div>
                     </div>
                     <div className="focus-pills">
@@ -559,15 +580,15 @@ export function LandingExperience({
                     <p className="micro-label">Search developers and repositories</p>
                     <div className="j-search-input">
                       <Search size={16} />
-                      <span>ada</span>
+                      <span>sai</span>
                       <i className="caret" />
                     </div>
                     <ul className="j-results">
                       <li>
-                        <b>AR</b>
+                        <b>S</b>
                         <span>
-                          <strong>Ada Reyes</strong>
-                          <small>@ada · Infrastructure engineer</small>
+                          <strong>Sai</strong>
+                          <small>@sai · Infrastructure engineer</small>
                         </span>
                         <ArrowRight size={14} />
                       </li>
@@ -575,7 +596,7 @@ export function LandingExperience({
                         <span className={`lang-dot is-rust`} />
                         <span>
                           <strong>edge-runtime</strong>
-                          <small>Rust · Maintained by Ada</small>
+                          <small>Rust · Maintained by Sai</small>
                         </span>
                         <ArrowRight size={14} />
                       </li>
@@ -588,7 +609,7 @@ export function LandingExperience({
                   <div className="j-compare">
                     <div className="j-side">
                       <p className="micro-label">edge-runtime</p>
-                      <strong>Ada Reyes</strong>
+                      <strong>Sai</strong>
                       <ul>
                         <li>Rust · Primary</li>
                         <li>Status · Active</li>
@@ -599,7 +620,7 @@ export function LandingExperience({
                     </div>
                     <div className="j-side">
                       <p className="micro-label">signal-core</p>
-                      <strong>Ada Reyes</strong>
+                      <strong>Sai</strong>
                       <ul>
                         <li>TypeScript · Primary</li>
                         <li>Status · Active</li>

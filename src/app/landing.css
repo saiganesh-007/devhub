@@ -1286,7 +1286,7 @@
 
 .journey-pin {
   position: relative;
-  height: 800vh;
+  height: 700vh;
 }
 
 .journey-stage {
@@ -1411,25 +1411,6 @@
   font-size: 13px;
   color: #fff;
   font-weight: 600;
-}
-
-.j-hub {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  width: 84px;
-  height: 84px;
-  border-radius: 24px;
-  border: 1px solid rgba(90, 200, 255, 0.35);
-  background:
-    radial-gradient(circle at 50% 50%, rgba(90, 200, 255, 0.16), transparent 70%),
-    rgba(8, 14, 22, 0.9);
-  box-shadow: 0 0 34px rgba(90, 200, 255, 0.22);
-  color: var(--lh-cyan);
-  will-change: transform, opacity;
 }
 
 .j-dev,
@@ -1687,6 +1668,70 @@
   border: 1px solid rgba(148, 163, 184, 0.16);
   background: linear-gradient(180deg, rgba(14, 22, 36, 0.92), rgba(9, 15, 24, 0.94));
   padding: 24px 22px;
+  overflow: hidden;
+  transition:
+    transform 0.28s var(--lh-ease),
+    border-color 0.24s ease,
+    box-shadow 0.28s ease;
+}
+
+/* Pointer-reactive radial highlight, positioned via --mx/--my. */
+.workflow-step::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    220px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(90, 200, 255, 0.14),
+    rgba(140, 123, 255, 0.06) 55%,
+    transparent 72%
+  );
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .workflow-step:hover {
+    transform: translateY(-3px);
+    border-color: rgba(90, 200, 255, 0.45);
+    box-shadow:
+      0 24px 60px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(90, 200, 255, 0.12),
+      0 0 28px rgba(90, 200, 255, 0.14);
+  }
+
+  .workflow-step:hover::before {
+    opacity: 1;
+  }
+
+  .workflow-step:hover .workflow-icon {
+    border-color: rgba(125, 215, 255, 0.75);
+    box-shadow: 0 0 22px rgba(90, 200, 255, 0.35);
+    color: var(--lh-cyan-strong);
+  }
+
+  .workflow-step:hover .story-link {
+    border-color: rgba(90, 200, 255, 0.55);
+    color: #fff;
+  }
+}
+
+.workflow-step:focus-within {
+  transform: translateY(-3px);
+  border-color: rgba(90, 200, 255, 0.45);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(90, 200, 255, 0.12),
+    0 0 28px rgba(90, 200, 255, 0.14);
+}
+
+.workflow-step:focus-within::before {
+  opacity: 1;
+}
+
+.workflow-step:active {
+  transform: translateY(-1px) scale(0.995);
 }
 
 .workflow-icon {
@@ -2123,8 +2168,15 @@
   .contrib-grid i[data-level="4"],
   .hw-spark-line,
   .hw-people li,
+  .workflow-step,
+  .workflow-step::before,
   .j-search-input .caret {
     animation: none !important;
+  }
+
+  .workflow-step,
+  .workflow-step::before {
+    transition: none !important;
   }
 
   .journey-pin {
