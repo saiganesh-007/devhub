@@ -12,6 +12,7 @@ import {
   GitCompareArrows,
   GitFork,
   Search,
+  Share2,
   Star,
   Users,
 } from "lucide-react";
@@ -140,9 +141,12 @@ export function LandingExperience({
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
+          // Start the moment the journey approaches (pin bottom reaches the
+          // viewport bottom) so the FIRST scroll already produces visible
+          // motion — no dead scroll while the hero leaves.
           trigger: ".journey-pin",
-          start: "top top",
-          end: "+=650%",
+          start: "top bottom",
+          end: "+=760%",
           scrub: 1.2,
         },
       });
@@ -182,8 +186,37 @@ export function LandingExperience({
         }
       });
 
-      tl.fromTo(".j-links path", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1 }, 1.1);
       tl.fromTo(".j-hub", { scale: 0.7, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.6 }, 1.2);
+
+      // Outro: the product frame recedes inside the SAME scrubbed timeline
+      // while the final CTA + footer reveal as one continuous flow — never a
+      // hard cut from cinematic scrub to static page scroll.
+      tl.to(".j-frame", { autoAlpha: 0, scale: 0.96, y: -60, filter: "blur(10px)", duration: 0.7 }, 6.0);
+      tl.to(".j-copy", { autoAlpha: 0, y: -30, duration: 0.6 }, 6.0);
+      tl.fromTo(
+        ".landing-cta",
+        { autoAlpha: 0, y: 90, scale: 0.985 },
+        { autoAlpha: 1, y: 0, scale: 1, duration: 0.9 },
+        6.15
+      );
+      tl.fromTo(
+        ".landing-footer-grid > *",
+        { autoAlpha: 0, y: 34 },
+        { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12 },
+        6.5
+      );
+      tl.fromTo(
+        ".landing-footer-meta",
+        { autoAlpha: 0, y: 20 },
+        { autoAlpha: 1, y: 0, duration: 0.5 },
+        6.8
+      );
+      tl.fromTo(
+        ".landing-footer-wordmark",
+        { yPercent: 30, autoAlpha: 0 },
+        { yPercent: 0, autoAlpha: 1, duration: 0.8 },
+        6.6
+      );
 
       // Single lightweight pointer loop: console tilt + layered depth drift.
       if (window.matchMedia("(pointer: fine)").matches) {
@@ -442,15 +475,8 @@ export function LandingExperience({
                 </div>
 
                 <div className="j-scene" data-scene="1">
-                  <svg className="j-links" viewBox="0 0 600 420" preserveAspectRatio="none">
-                    <path pathLength={1} d="M120 90 C220 110 260 180 300 205" />
-                    <path pathLength={1} d="M480 90 C400 120 350 170 312 200" />
-                    <path pathLength={1} d="M110 330 C200 310 250 250 292 222" />
-                    <path pathLength={1} d="M490 330 C410 300 355 250 315 220" />
-                    <path pathLength={1} d="M300 380 C300 330 300 280 300 236" />
-                  </svg>
                   <div className="j-hub">
-                    <DevhubCatBadge size={52} />
+                    <Share2 size={22} />
                   </div>
                   <div className="j-chips converged">
                     {[
