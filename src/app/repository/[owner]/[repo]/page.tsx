@@ -1,8 +1,38 @@
-import Image from "next/image"; import { notFound } from "next/navigation"; import { GitCommit } from "lucide-react"; import { AppShell,RateBadge } from "@/components/shell"; import { Button,Card,ExternalLink,Metric,SectionTitle } from "@/components/ui"; import { SaveButton } from "@/components/save-button"; import { RecentViewBeacon } from "@/components/recent-view-beacon"; import { compactNumber,formatDate,languagePercentages } from "@/lib/analytics"; import { GitHubError,getActivity,getContributors,getLanguages,getRepo } from "@/lib/github/client";
-export default async function RepoPage({params}:{params:Promise<{owner:string;repo:string}>}){const {owner,repo}=await params;let repository,languages,contributors,activity;try{[repository,languages,contributors,activity]=await Promise.all([getRepo(owner,repo),getLanguages(owner,repo),getContributors(owner,repo),getActivity(owner,repo)])}catch(e){if(e instanceof GitHubError&&e.status===404)notFound();throw e}const distribution=languagePercentages(languages);return <AppShell section="Repository"><RecentViewBeacon type="repository" identifier={repository.full_name||`${owner}/${repo}`} metadata={{name:repository.full_name,description:repository.description,language:repository.language}}/>
-  <RateBadge/><div className="mt-5 flex flex-col gap-6 border-b border-line pb-9 lg:flex-row lg:items-start lg:justify-between"><div><p className="font-mono text-xs text-ink3">{owner} / repository</p><h1 className="mt-2 text-4xl font-semibold tracking-[-.04em] text-ink">{repo}</h1><p className="mt-4 max-w-3xl text-ink2">{repository.description||"No description provided."}</p><div className="mt-4 flex flex-wrap gap-2">{repository.topics?.map(topic=><span key={topic} className="border border-line px-2.5 py-1 font-mono text-[9px] text-ink3">{topic}</span>)}</div></div><div className="flex gap-2"><SaveButton kind="repositories" payload={{github_repo_id:repository.id||0,owner,repo_name:repo,full_name:repository.full_name||`${owner}/${repo}`,description:repository.description||null,stars:repository.stargazers_count,language:repository.language||null}}/><Button href={`/compare?type=repository&a=${owner}/${repo}`} variant="secondary">Compare</Button></div></div>
-  <div className="mt-8 grid grid-cols-2 border-y border-line py-3 md:grid-cols-3 lg:grid-cols-6"><Metric label="Stars" value={compactNumber(repository.stargazers_count)}/><Metric label="Forks" value={compactNumber(repository.forks_count)}/><Metric label="Watchers" value={compactNumber(repository.watchers_count||0)}/><Metric label="Issues" value={compactNumber(repository.open_issues_count||0)}/><Metric label="Size" value={`${compactNumber(repository.size||0)} KB`}/><Metric label="License" value={repository.license?.name||"—"}/></div>
-  <div className="mt-12 grid gap-10 lg:grid-cols-2"><div><SectionTitle eyebrow="Language analytics" title="Technology composition"/><Card variant="repository"><div className="mb-7 flex h-2 overflow-hidden bg-panel">{distribution.map((l,i)=><div key={l.name} title={`${l.name} ${l.value}%`} style={{width:`${l.value}%`,backgroundColor:["var(--chart-1)","var(--chart-2)","var(--chart-3)","var(--chart-4)","var(--chart-5)"][i%5]}}/>)}</div>{distribution.map((l,i)=><div key={l.name} className="flex items-center justify-between border-t border-line py-3 text-sm"><span className="flex items-center gap-2 text-ink"><i className="size-2" style={{backgroundColor:["var(--chart-1)","var(--chart-2)","var(--chart-3)","var(--chart-4)","var(--chart-5)"][i%5]}}/>{l.name}</span><span className="font-mono text-xs text-ink3">{l.value}%</span></div>)}</Card></div><div><SectionTitle eyebrow="Contributors" title="Core contributors"/><div className="grid grid-cols-2 border-l border-t border-line sm:grid-cols-3">{contributors.slice(0,9).map(person=><a href={person.html_url} target="_blank" rel="noreferrer" key={person.login} className="border-b border-r border-line p-4 hover:bg-panel-hover"><Image src={person.avatar_url} alt="" width={36} height={36} className="size-9 rounded-full"/><p className="mt-3 truncate text-sm text-ink">{person.login}</p><p className="mt-1 font-mono text-[9px] text-ink3">{compactNumber(person.contributions)} contributions</p></a>)}</div></div></div>
-  <div className="mt-12"><SectionTitle eyebrow="Activity" title="Recent commits" action={<ExternalLink href={repository.html_url||`https://github.com/${owner}/${repo}`}>View on GitHub</ExternalLink>}/><div className="border-t border-line">{activity.map(item=><a href={item.html_url} target="_blank" rel="noreferrer" key={item.sha} className="grid grid-cols-[22px_1fr_auto] gap-3 border-b border-line py-4 hover:bg-panel-hover"><GitCommit size={15} className="text-ink3"/><div className="min-w-0"><p className="truncate text-sm text-ink">{item.commit.message.split("\n")[0]}</p><p className="mt-1 font-mono text-[9px] text-ink3">{item.commit.author.name}</p></div><time className="text-xs text-ink3">{formatDate(item.commit.author.date)}</time></a>)}</div></div>
-  </AppShell>}
+import { notFound } from "next/navigation";
+import { AppShell } from "@/components/shell";
+import { RecentViewBeacon } from "@/components/recent-view-beacon";
+import { RepositoryContent } from "@/components/repository-content";
+import { GitHubError, getLanguages, getContributors, getActivity, getRepo } from "@/lib/github/client";
 
+export default async function RepoPage({ params }: { params: Promise<{ owner: string; repo: string }> }) {
+  const { owner, repo } = await params;
+  let repository, languages, contributors, activity;
+  try {
+    [repository, languages, contributors, activity] = await Promise.all([
+      getRepo(owner, repo),
+      getLanguages(owner, repo),
+      getContributors(owner, repo),
+      getActivity(owner, repo),
+    ]);
+  } catch (e) {
+    if (e instanceof GitHubError && e.status === 404) notFound();
+    throw e;
+  }
+
+  return (
+    <AppShell section="Repository">
+      <RecentViewBeacon
+        type="repository"
+        identifier={repository.full_name || `${owner}/${repo}`}
+        metadata={{ name: repository.full_name, description: repository.description, language: repository.language }}
+      />
+
+      <RepositoryContent
+        repository={repository}
+        languages={languages}
+        contributors={contributors}
+        activity={activity}
+      />
+    </AppShell>
+  );
+}

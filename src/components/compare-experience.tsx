@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeftRight, LoaderCircle, RotateCcw } from "lucide-react";
-import type { GitHubRepo, GitHubUser } from "@/types/github";
-import { compactNumber, summarizeRepositories } from "@/lib/analytics";
+import { ArrowLeftRight, LoaderCircle, RotateCcw, GitCommit, Tag, CalendarDays } from "lucide-react";
+import type { GitHubRepo, GitHubUser, Contributor } from "@/types/github";
+import { compactNumber, formatDate, summarizeRepositories, languagePercentages } from "@/lib/analytics";
 import { Tabs, TextInput } from "@/components/ui";
+import { RepoLanguageChart } from "@/components/repo-language-chart";
+import { LanguageChart } from "@/components/language-chart";
 
 type CompareType = "developer" | "repository";
 type DevData = { user: GitHubUser; repositories: GitHubRepo[] };
 type RepoData = {
   repository: GitHubRepo;
-  contributors: unknown[];
+  contributors: Contributor[];
   languages: Record<string, number>;
 };
 
@@ -28,6 +30,7 @@ export function CompareExperience() {
   const [loading, setLoading] = useState(false);
   const ownUrl = useRef("");
   const lastRan = useRef("");
+  const isInitialRender = useRef(true);
 
   function syncUrl(t: CompareType, sideA: string, sideB: string) {
     const cleanA = sideA.trim();
@@ -45,7 +48,7 @@ export function CompareExperience() {
     router.replace(`/compare?${qs}`, { scroll: false });
   }
 
-  async function runWith(t: CompareType, sideA: string, sideB: string, force: boolean) {
+  const runWith = useCallback(async (t: CompareType, sideA: string, sideB: string, force: boolean) => {
     const signature = `${t}|${sideA.trim()}|${sideB.trim()}`;
     if (!force && lastRan.current === signature) return;
     lastRan.current = signature;
@@ -77,25 +80,39 @@ export function CompareExperience() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [syncUrl]);
 
   useEffect(() => {
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      const nextType: CompareType =
+        searchParams.get("type") === "repository" ? "repository" : "developer";
+      const nextA = searchParams.get("a") ?? "";
+      const nextB = searchParams.get("b") ?? "";
+      setType(nextType);
+      setA(nextA);
+      setB(nextB);
+      if (nextA.trim() && nextB.trim()) {
+        void runWith(nextType, nextA, nextB, false);
+      }
+      return;
+    }
     const fromOwnWrite = ownUrl.current === searchParams.toString();
     ownUrl.current = "";
     const nextType: CompareType =
       searchParams.get("type") === "repository" ? "repository" : "developer";
     const nextA = searchParams.get("a") ?? "";
     const nextB = searchParams.get("b") ?? "";
-    // keep the editable inputs in sync with the URL (external store) after navigation
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setType(nextType);
     setA(nextA);
     setB(nextB);
     if (fromOwnWrite) return;
-    if (nextA.trim() && nextB.trim()) void runWith(nextType, nextA, nextB, false);
-    else setData(emptyResult);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+    if (nextA.trim() && nextB.trim()) {
+      void runWith(nextType, nextA, nextB, false);
+    } else {
+      setData(emptyResult);
+    }
+  }, [searchParams, runWith]);
 
   function run() {
     void runWith(type, a, b, true);
@@ -214,31 +231,57 @@ function Results({
     const [first, second] = data as [DevData, DevData];
     const sa = summarizeRepositories(first.repositories);
     const sb = summarizeRepositories(second.repositories);
+    const langA = languagePercentages(
+      first.repositories.reduce<Record<string, number>>((acc, repo) => {
+        if (repo.language) acc[repo.language] = (acc[repo.language] || 0) + (repo.size || 0);
+        return acc;
+      }, {}),
+    );
+    const langB = languagePercentages(
+      second.repositories.reduce<Record<string, number>>((acc, repo) => {
+        if (repo.language) acc[repo.language] = (acc[repo.language] || 0) + (repo.size || 0);
+        return acc;
+      }, {}),
+    );
+
     return (
-      <div className="mt-10">
-        <div className="grid gap-4 md:grid-cols-2">
+      <div className="mt-10 space-y-10">
+        <div className="grid gap-6 md:grid-cols-2">
           {[
-            [first, sa],
-            [second, sb],
-          ].map(([entry, summary]) => {
+            [first, sa, langA, "A"],
+            [second, sb, langB, "B"],
+          ].map(([entry, summary, langs, sideLabel]) => {
             const d = entry as DevData;
             const s = summary as ReturnType<typeof summarizeRepositories>;
             return (
-              <CompareCard key={d.user.login} side={d.user.login === second.user.login ? "B" : "A"} onRefresh={onRun} onSwap={onSwap}>
-                <CardHeader title={d.user.name || d.user.login} subtitle={`@${d.user.login}`} />
-                <Metric label="Followers" value={compactNumber(d.user.followers || 0)} />
-                <Metric label="Repositories" value={d.user.public_repos || 0} />
-                <Metric label="Total stars" value={compactNumber(s.totalStars)} />
-                <Metric label="Total forks" value={compactNumber(s.totalForks)} />
+              <CompareCard key={d.user.login} side={sideLabel} onRefresh={onRun} onSwap={onSwap}>
+                <CardHeader
+                  title={d.user.name || d.user.login}
+                  subtitle={`@${d.user.login}`}
+                  avatar={d.user.avatar_url}
+                />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Metric label="Followers" value={compactNumber(d.user.followers || 0)} />
+                  <Metric label="Following" value={compactNumber(d.user.following || 0)} />
+                  <Metric label="Repositories" value={d.user.public_repos || 0} />
+                  <Metric label="Total Stars" value={compactNumber(s.totalStars)} />
+                  <Metric label="Total Forks" value={compactNumber(s.totalForks)} />
+                  <Metric label="Joined" value={formatDate(d.user.created_at)} />
+                </div>
                 <FooterRow>
-                  Primary language:{" "}
-                  <b>{s.languages[0]?.name || "—"}</b>
+                  Primary language: <b>{s.languages[0]?.name || "—"}</b>
                 </FooterRow>
+                {langs.length > 0 && (
+                  <div className="mt-6">
+                    <p className="text-metadata mb-3">Language Distribution</p>
+                    <LanguageChart data={langs} />
+                  </div>
+                )}
               </CompareCard>
             );
           })}
         </div>
-        <p className="mt-6 text-xs text-ink3">
+        <p className="text-xs text-ink3 text-center">
           Both scores reflect live GitHub data. DevHub never declares a winner —
           keep the judgment human.
         </p>
@@ -247,13 +290,31 @@ function Results({
   }
 
   const [first, second] = data as [RepoData, RepoData];
+  const langDistA = Object.entries(first.languages)
+    .map(([name, bytes]) => ({ name, bytes, value: 0 }))
+    .sort((a, b) => b.bytes - a.bytes);
+  const totalA = langDistA.reduce((sum, d) => sum + d.bytes, 0);
+  const langDistAWithPct = langDistA.map((d) => ({
+    ...d,
+    value: totalA > 0 ? Math.round((d.bytes / totalA) * 1000) / 10 : 0,
+  }));
+
+  const langDistB = Object.entries(second.languages)
+    .map(([name, bytes]) => ({ name, bytes, value: 0 }))
+    .sort((a, b) => b.bytes - a.bytes);
+  const totalB = langDistB.reduce((sum, d) => sum + d.bytes, 0);
+  const langDistBWithPct = langDistB.map((d) => ({
+    ...d,
+    value: totalB > 0 ? Math.round((d.bytes / totalB) * 1000) / 10 : 0,
+  }));
+
   return (
-    <div className="mt-10">
-      <div className="grid gap-4 md:grid-cols-2">
-        {[first, second].map((d) => (
+    <div className="mt-10 space-y-10">
+      <div className="grid gap-6 md:grid-cols-2">
+        {[first, second].map((d, idx) => (
           <CompareCard
             key={d.repository.full_name}
-            side={d.repository.full_name === second.repository.full_name ? "B" : "A"}
+            side={idx === 0 ? "A" : "B"}
             onRefresh={onRun}
             onSwap={onSwap}
           >
@@ -261,21 +322,121 @@ function Results({
               title={d.repository.full_name ?? d.repository.name}
               subtitle={d.repository.description ?? ""}
             />
-            <Metric label="Stars" value={compactNumber(d.repository.stargazers_count)} />
-            <Metric label="Forks" value={compactNumber(d.repository.forks_count)} />
-            <Metric label="Issues" value={compactNumber(d.repository.open_issues_count || 0)} />
-            <Metric label="Contributors" value={d.contributors.length} />
-            <FooterRow>
-              Language: <b>{d.repository.language || "—"}</b> · License:{" "}
-              <b>{d.repository.license?.name || "—"}</b>
-            </FooterRow>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <Metric label="Stars" value={compactNumber(d.repository.stargazers_count)} />
+              <Metric label="Forks" value={compactNumber(d.repository.forks_count)} />
+              <Metric label="Watchers" value={compactNumber(d.repository.watchers_count || 0)} />
+              <Metric label="Issues" value={compactNumber(d.repository.open_issues_count || 0)} />
+              <Metric label="Contributors" value={d.contributors.length} />
+              <Metric label="Size" value={`${compactNumber(d.repository.size || 0)} KB`} />
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-ink3">
+              {d.repository.language && (
+                <span className="flex items-center gap-1">
+                  <span className="size-2 rounded bg-brand1" />
+                  {d.repository.language}
+                </span>
+              )}
+              {d.repository.license && (
+                <span className="flex items-center gap-1">
+                  <Tag size={12} />
+                  {d.repository.license.name}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <CalendarDays size={12} />
+                Updated {formatDate(d.repository.updated_at)}
+              </span>
+              <span className="flex items-center gap-1">
+                <GitCommit size={12} />
+                {d.repository.default_branch}
+              </span>
+            </div>
+            {langDistAWithPct.length > 0 && idx === 0 && (
+              <div className="mt-6">
+                <p className="text-metadata mb-3">Language Distribution</p>
+                <RepoLanguageChart data={langDistAWithPct} />
+              </div>
+            )}
+            {langDistBWithPct.length > 0 && idx === 1 && (
+              <div className="mt-6">
+                <p className="text-metadata mb-3">Language Distribution</p>
+                <RepoLanguageChart data={langDistBWithPct} />
+              </div>
+            )}
           </CompareCard>
         ))}
       </div>
-      <p className="mt-6 text-xs text-ink3">
+
+      <section>
+        <h2 className="text-section-title mb-4">Metric Comparison</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" role="table">
+            <thead>
+              <tr className="border-b border-line text-left">
+                <th className="pb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink3 w-48">Metric</th>
+                <th className="pb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink3 text-right">Side A</th>
+                <th className="pb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink3 text-right pl-8">Side B</th>
+                <th className="pb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-ink3 text-right pl-8">Difference</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ComparisonRow
+                label="Stars"
+                a={first.repository.stargazers_count}
+                b={second.repository.stargazers_count}
+              />
+              <ComparisonRow
+                label="Forks"
+                a={first.repository.forks_count}
+                b={second.repository.forks_count}
+              />
+              <ComparisonRow
+                label="Watchers"
+                a={first.repository.watchers_count || 0}
+                b={second.repository.watchers_count || 0}
+              />
+              <ComparisonRow
+                label="Open Issues"
+                a={first.repository.open_issues_count || 0}
+                b={second.repository.open_issues_count || 0}
+              />
+              <ComparisonRow
+                label="Contributors"
+                a={first.contributors.length}
+                b={second.contributors.length}
+              />
+              <ComparisonRow
+                label="Size (KB)"
+                a={first.repository.size || 0}
+                b={second.repository.size || 0}
+              />
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <p className="text-xs text-ink3 text-center">
         Factual GitHub metrics, side by side. DevHub never declares a winner.
       </p>
     </div>
+  );
+}
+
+function ComparisonRow({ label, a, b }: { label: string; a: number; b: number }) {
+  const diff = a - b;
+  const diffPct = a !== 0 ? Math.round((diff / a) * 100) : 0;
+  return (
+    <tr className="border-b border-line/50">
+      <td className="py-3 font-medium text-ink">{label}</td>
+      <td className="py-3 font-mono tabular-nums text-ink text-right">{compactNumber(a)}</td>
+      <td className="py-3 font-mono tabular-nums text-ink text-right pl-8">{compactNumber(b)}</td>
+      <td className="py-3 font-mono tabular-nums text-right pl-8">
+        <span className={diff >= 0 ? "text-ok" : "text-err"}>
+          {diff >= 0 ? "+" : ""}{compactNumber(diff)} ({diffPct >= 0 ? "+" : ""}{diffPct}%)
+        </span>
+      </td>
+    </tr>
   );
 }
 
@@ -320,9 +481,20 @@ function CompareCard({
   );
 }
 
-function CardHeader({ title, subtitle }: { title: string; subtitle: string }) {
+function CardHeader({ title, subtitle, avatar }: { title: string; subtitle: string; avatar?: string }) {
   return (
     <div className="mb-6">
+      {avatar && (
+        <div className="mb-4">
+          <img
+            src={avatar}
+            alt=""
+            width={80}
+            height={80}
+            className="size-20 rounded-2xl ring-1 ring-line object-cover"
+          />
+        </div>
+      )}
       <h3 className="text-xl font-semibold tracking-tight text-ink">{title}</h3>
       {subtitle && <p className="mt-1 truncate text-sm text-ink3">{subtitle}</p>}
     </div>
@@ -330,9 +502,9 @@ function CardHeader({ title, subtitle }: { title: string; subtitle: string }) {
 }
 
 const Metric = ({ label, value }: { label: string; value: string | number }) => (
-  <div className="flex items-center justify-between border-t border-line py-3">
-    <span className="text-xs uppercase tracking-wider text-ink3">{label}</span>
-    <span className="font-semibold tabular-nums text-ink">{value}</span>
+  <div className="card-surface card-surface--metric p-4">
+    <p className="text-metadata">{label}</p>
+    <p className="text-statistic mt-1">{value}</p>
   </div>
 );
 
