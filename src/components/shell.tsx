@@ -1,4 +1,91 @@
-import Link from "next/link"; import { Activity,GitCompareArrows,Heart,LayoutDashboard,Search } from "lucide-react"; import { AuthStatus } from "@/components/auth-status"; import { Logo } from "@/components/brand";
-const nav=[['/dashboard','Dashboard',LayoutDashboard],['/search','Search',Search],['/compare','Compare',GitCompareArrows],['/favourites','Saved',Heart]] as const;
-export function AppShell({children}:{children:React.ReactNode}){return <div className="min-h-screen bg-[#070809] text-zinc-200"><header className="sticky top-0 z-40 border-b border-white/[.07] bg-[#070809]/90 backdrop-blur-xl"><div className="mx-auto flex h-16 max-w-[1500px] items-center justify-between px-4 sm:px-7"><Logo/><nav className="hidden h-full items-center md:flex">{nav.map(([href,label,Icon])=><Link key={href} href={href} className="flex h-full items-center gap-2 border-x border-transparent px-4 text-[11px] uppercase tracking-[.08em] text-zinc-500 hover:border-white/[.06] hover:bg-white/[.025] hover:text-white"><Icon size={14}/>{label}</Link>)}</nav><AuthStatus/></div></header><main className="mx-auto max-w-[1500px] px-4 py-8 pb-24 sm:px-7 sm:py-12">{children}</main><nav className="fixed inset-x-3 bottom-3 z-50 flex justify-around border border-white/10 bg-zinc-950/95 p-2 backdrop-blur md:hidden">{nav.map(([href,label,Icon])=><Link key={href} href={href} aria-label={label} className="flex flex-col items-center gap-1 px-3 py-1 text-[9px] uppercase tracking-wider text-zinc-500"><Icon size={17}/>{label}</Link>)}</nav></div>}
-export function RateBadge(){return <span className="inline-flex items-center gap-2 border-l border-lime-300 px-3 py-1 font-mono text-[9px] uppercase tracking-[.15em] text-zinc-500"><Activity size={12} className="text-lime-300"/>Live GitHub data</span>}
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { ArrowRight, Search } from "lucide-react";
+import { BrandLockup } from "@/components/brand";
+import { AuthStatus } from "@/components/auth-status";
+import { ThemeControl } from "@/components/theme/theme-toggle";
+import { MobileHeader } from "@/components/mobile-nav";
+import { NavList } from "@/components/shell-nav";
+
+export async function AppShell({
+  children,
+  section,
+  wide = false,
+}: {
+  children: ReactNode;
+  section?: string;
+  wide?: boolean;
+}) {
+  return (
+    <div className="min-h-dvh bg-background text-foreground">
+      <aside
+        aria-label="Application sidebar"
+        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-surface-1/80 backdrop-blur-xl lg:flex"
+      >
+        <div className="flex h-16 items-center border-b border-line px-5">
+          <Link href="/" aria-label="DevHub home">
+            <BrandLockup />
+          </Link>
+        </div>
+        <div className="flex-1 overflow-y-auto px-3 py-5">
+          <p className="text-metadata px-3 pb-3">Workspace</p>
+          <NavList variant="sidebar" />
+        </div>
+      </aside>
+
+      <div className="lg:pl-64">
+        <MobileHeader account={<AuthStatus />} section={section} />
+        <header className="sticky top-0 z-30 hidden border-b border-line bg-background/85 backdrop-blur-xl lg:block">
+          <div className="mx-auto flex h-16 w-full max-w-[88rem] items-center gap-4 px-6">
+            <nav aria-label="Breadcrumb" className="hidden min-w-0 xl:block">
+              <ol className="flex min-w-0 items-center gap-2 text-sm">
+                <li className="shrink-0 text-ink3">DevHub</li>
+                {section && (
+                  <>
+                    <li aria-hidden="true" className="text-ink3">
+                      /
+                    </li>
+                    <li aria-current="page" className="truncate font-medium text-ink">
+                      {section}
+                    </li>
+                  </>
+                )}
+              </ol>
+            </nav>
+            <div className="flex min-w-0 flex-1 justify-center">
+              <Link
+                href="/search"
+                aria-label="Go to search developers and repositories"
+                className="search-shortcut"
+              >
+                <Search size={16} aria-hidden="true" />
+                <span className="truncate">Search developers or repositories</span>
+                <span className="search-shortcut__action" aria-hidden="true">
+                  <ArrowRight size={14} />
+                </span>
+              </Link>
+            </div>
+            <div className="ml-auto flex shrink-0 items-center gap-3">
+              <AuthStatus />
+              <ThemeControl />
+            </div>
+          </div>
+        </header>
+        <main className={`app-main ${wide ? "max-w-[88rem]" : ""}`}>
+          {children}
+        </main>
+      </div>
+
+      <nav
+        aria-label="Primary"
+        className="fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-line bg-surface-1/95 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-elevated backdrop-blur lg:hidden"
+      >
+        <NavList variant="bottom" label="Primary" />
+      </nav>
+    </div>
+  );
+}
+
+export function RateBadge() {
+  return <span className="badge-dot">Live GitHub data</span>;
+}

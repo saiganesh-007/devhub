@@ -1,2 +1,21 @@
-import type { Metadata } from "next"; import { AppShell,RateBadge } from "@/components/shell"; import { SearchExperience } from "@/components/search-experience";
-export const metadata:Metadata={title:"Search"}; export default function SearchPage(){return <AppShell><div className="mb-10"><RateBadge/><h1 className="mt-5 text-4xl font-semibold tracking-[-.04em] text-white">Search the open-source world.</h1><p className="mt-3 text-zinc-500">Find developers and repositories, then inspect what the numbers mean.</p></div><SearchExperience/></AppShell>}
+import type { Metadata } from "next";
+import { AppShell, RateBadge } from "@/components/shell";
+import { PageHeader } from "@/components/ui";
+import { SearchExperience } from "@/components/search-experience";
+
+export const metadata: Metadata = { title: "Search" };
+
+export default function SearchPage() {
+  return (
+    <AppShell section="Search">
+      <div className="mb-10 space-y-5">
+        <RateBadge />
+        <PageHeader
+          title="Search the open-source world."
+          description="Find developers and repositories, then inspect what the numbers mean."
+        />
+      </div>
+      <SearchExperience />
+    </AppShell>
+  );
+}

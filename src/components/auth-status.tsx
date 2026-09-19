@@ -1,2 +1,25 @@
-import Link from "next/link"; import { LogOut } from "lucide-react"; import { logout } from "@/app/actions/auth"; import { createSupabaseServer } from "@/lib/supabase/server";
-export async function AuthStatus(){const supabase=await createSupabaseServer();const user=supabase?(await supabase.auth.getUser()).data.user:null;if(!user)return <Link href="/login" className="app-button app-button-ghost">Sign in</Link>;return <form action={logout}><button className="app-button app-button-ghost" aria-label="Sign out"><LogOut size={14}/>Sign out</button></form>}
+import Link from "next/link";
+import { createSupabaseServer } from "@/lib/supabase/server";
+import { UserMenu } from "@/components/user-menu";
+
+export async function AuthStatus() {
+  const supabase = await createSupabaseServer();
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+
+  if (!user) {
+    return (
+      <Link href="/login" className="btn btn-primary btn-sm">
+        Sign in
+      </Link>
+    );
+  }
+
+  const name = String(
+    user.user_metadata?.display_name ||
+      user.user_metadata?.full_name ||
+      user.email?.split("@")[0] ||
+      "Account",
+  );
+
+  return <UserMenu name={name} />;
+}

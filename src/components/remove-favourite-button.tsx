@@ -17,7 +17,16 @@ export function RemoveFavouriteButton({ endpoint, label }: { endpoint: string; l
     else setFailed(true);
     setBusy(false);
   }
-  return <button type="button" onClick={remove} disabled={busy} aria-label={`Remove ${label} from favourites`} className="collection-remove">
-    <X size={14} aria-hidden="true" />{busy ? "Removing…" : failed ? "Retry" : "Remove"}
-  </button>;
+return (
+    <button
+      type="button"
+      onClick={remove}
+      disabled={busy}
+      aria-label={`Remove ${label} from favourites`}
+      className="btn btn-sm btn-danger shrink-0"
+    >
+      <X size={14} aria-hidden="true" />
+      {busy ? "Removing…" : failed ? "Retry" : "Remove"}
+    </button>
+  );
 }

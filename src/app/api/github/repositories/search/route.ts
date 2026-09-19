@@ -1,2 +1,2 @@
 import { apiData,apiError } from "@/lib/github/http"; import { searchRepos } from "@/lib/github/client"; import { searchSchema } from "@/lib/validation";
-export async function GET(request:Request){try{const params=new URL(request.url).searchParams,q=searchSchema.parse(params.get("q")),page=Math.max(1,Math.min(10,Number(params.get("page")||1)));return apiData(await searchRepos(q,page));}catch(e){return apiError(e)}}
+export async function GET(request:Request){try{const params=new URL(request.url).searchParams,q=searchSchema.parse(params.get("q")),page=Math.max(1,Math.min(10,Math.floor(Number(params.get("page")||1))||1));return apiData(await searchRepos(q,page));}catch(e){return apiError(e)}}
