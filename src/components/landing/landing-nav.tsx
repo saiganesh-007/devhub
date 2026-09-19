@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Menu, X } from "lucide-react";
-import { DevhubCatMark } from "@/components/brand";
+import { DevhubCatBadge } from "@/components/brand";
 
 const LINKS = [
   { href: "/dashboard", label: "Explore" },
@@ -62,7 +62,7 @@ export function LandingNav() {
           aria-label="DevHub home"
           tabIndex={collapsed && !expanded ? -1 : 0}
         >
-          <DevhubCatMark size={30} priority />
+          <DevhubCatBadge size={30} priority />
           <span className="landing-pill-word">DEVHUB</span>
         </Link>
 
@@ -94,7 +94,7 @@ export function LandingNav() {
         </div>
 
         <Link href="/" className="landing-pill-collapsed-cat" aria-label="DevHub — show navigation">
-          <DevhubCatMark size={32} priority />
+          <DevhubCatBadge size={34} priority />
         </Link>
       </div>
 

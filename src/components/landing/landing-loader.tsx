@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { DevhubCatMark } from "@/components/brand";
+import { DevhubCatBadge } from "@/components/brand";
 
 type LandingLoaderProps = {
   onComplete?: () => void;
@@ -114,7 +114,7 @@ export function LandingLoader({ onComplete }: LandingLoaderProps) {
     <div ref={rootRef} className="devhub-loader-scene" role="status" aria-live="polite" aria-label="Loading DevHub">
       <div className="loader-paint-stage">
         <div className="loader-brand">
-          <DevhubCatMark size={40} priority />
+          <DevhubCatBadge size={40} priority />
           <span className="loader-brand-word">DEVHUB</span>
         </div>
 

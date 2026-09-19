@@ -66,7 +66,7 @@ export function LandingPageShell() {
         // Prevent keyboard focus landing underneath the opaque loader.
         inert={loading ? true : undefined}
       >
-        <LandingExperience ready={!loading} />
+        <LandingExperience ready={!loading} navSuppressed={loading} />
       </div>
 
       {overlayVisible ? (

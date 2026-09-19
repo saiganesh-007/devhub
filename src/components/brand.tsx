@@ -50,6 +50,26 @@ export function DevhubCatMark({ size = 32, priority = false }: { size?: number; 
   );
 }
 
+/** Bright presentation of the SAME official cat identity for dark surfaces.
+ *  Icy-white plate + electric-blue rim + restrained glow; the dark navy cat
+ *  stays clearly visible. Never squeezes the full wordmark into the circle. */
+export function DevhubCatBadge({ size = 32, priority = false }: { size?: number; priority?: boolean }) {
+  return (
+    <span
+      className="devhub-cat-badge"
+      aria-hidden="true"
+      style={{ width: size, height: size, borderRadius: size / 2 }}
+    >
+      <Image
+        src="/brand/devhub-logo.png"
+        alt=""
+        width={256}
+        height={256}
+        priority={priority}
+        draggable={false}
+      />
+    </span>
+  );
 export function LogoFallback() {
   return (
     <span className="grid size-7 place-items-center rounded-md border border-sky-400/35 bg-sky-400/10 text-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.2)]">
