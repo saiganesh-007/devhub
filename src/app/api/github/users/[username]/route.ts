@@ -1,0 +1,2 @@
+import { apiData,apiError } from "@/lib/github/http"; import { getUser,getUserRepos } from "@/lib/github/client"; import { usernameSchema } from "@/lib/validation";
+export async function GET(_:Request,{params}:{params:Promise<{username:string}>}){try{const username=usernameSchema.parse((await params).username);const [user,repositories]=await Promise.all([getUser(username),getUserRepos(username)]);return apiData({user,repositories});}catch(e){return apiError(e)}}

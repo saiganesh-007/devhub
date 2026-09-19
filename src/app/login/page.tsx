@@ -1,0 +1,2 @@
+import type { Metadata } from "next"; import { AuthShell } from "@/components/auth-shell"; import { AuthForm } from "@/components/auth-form";
+export const metadata:Metadata={title:"Sign in"}; export default function Login(){return <AuthShell eyebrow="Secure workspace" title="Continue your research." description="Access saved developers, repositories, comparisons, and recent intelligence."><AuthForm mode="login"/></AuthShell>}

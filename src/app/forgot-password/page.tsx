@@ -1,0 +1,2 @@
+import type { Metadata } from "next"; import { AuthShell } from "@/components/auth-shell"; import { ForgotPasswordForm } from "@/components/password-recovery";
+export const metadata:Metadata={title:"Recover account"}; export default function Forgot(){return <AuthShell eyebrow="Account recovery" title="Reset your password." description="We will send a secure recovery link to the email connected to your workspace."><ForgotPasswordForm/></AuthShell>}

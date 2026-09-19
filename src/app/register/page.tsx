@@ -1,0 +1,2 @@
+import type { Metadata } from "next"; import { AuthShell } from "@/components/auth-shell"; import { AuthForm } from "@/components/auth-form";
+export const metadata:Metadata={title:"Create account"}; export default function Register(){return <AuthShell eyebrow="Create a workspace" title="Build your intelligence layer." description="Your research stays private and follows you across every DevHub session."><AuthForm mode="register"/></AuthShell>}
