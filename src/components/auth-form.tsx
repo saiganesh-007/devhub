@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Mail } from "lucide-react";
+import { safeInternalPath } from "@/lib/navigation";
 import { createSupabaseBrowser } from "@/lib/supabase/browser";
 
 function notifyAuthError() {
@@ -84,14 +85,18 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     } else if (mode === "register" && !result.data.session) {
       router.push(`/verify-email?email=${encodeURIComponent(email)}&flow=signup`);
     } else {
-      router.push("/dashboard");
+      window.dispatchEvent(new Event("devhub:auth-success"));
+      const next = safeInternalPath(
+        new URLSearchParams(window.location.search).get("next"),
+      );
+      router.push(next);
       router.refresh();
     }
     setPending(false);
   }
 
   return (
-    <form onSubmit={submit} className="mt-8 space-y-5" noValidate>
+    <form onSubmit={submit} className="mt-8 space-y-5" aria-busy={pending}>
       {mode === "register" && (
         <Field label="Name">
           <input

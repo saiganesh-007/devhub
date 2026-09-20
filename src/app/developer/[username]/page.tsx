@@ -41,8 +41,8 @@ export default async function DeveloperPage({ params }: { params: Promise<{ user
       />
 
       {/* Hero Section */}
-      <div className="flex flex-col gap-8 border-b border-line pb-12 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex gap-5">
+      <div className="profile-hero flex flex-col gap-8 border-b border-line pb-12 lg:flex-row lg:items-start lg:justify-between">
+        <div className="profile-identity flex gap-5">
           <div className="relative shrink-0">
             <Image
               src={user.avatar_url}
@@ -116,7 +116,7 @@ export default async function DeveloperPage({ params }: { params: Promise<{ user
       </div>
 
       {/* Key Metrics */}
-      <div className="mt-10 grid grid-cols-2 border-y border-line py-6 md:grid-cols-3 lg:grid-cols-6">
+      <div className="signal-strip mt-10 grid grid-cols-2 border-y border-line py-6 md:grid-cols-3 lg:grid-cols-6">
         <Metric label="Followers" value={compactNumber(user.followers || 0)} />
         <Metric label="Following" value={compactNumber(user.following || 0)} />
         <Metric label="Repositories" value={user.public_repos || 0} />
@@ -146,7 +146,7 @@ export default async function DeveloperPage({ params }: { params: Promise<{ user
           {/* Repository Signals */}
           <section>
             <SectionTitle eyebrow="Repository Signals" title="Aggregate Metrics" />
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="intelligence-facts grid gap-4 sm:grid-cols-2">
               <Card variant="metric">
                 <p className="text-metadata">Median Stars / Repo</p>
                 <p className="text-statistic mt-2">

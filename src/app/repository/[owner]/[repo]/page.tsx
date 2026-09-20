@@ -3,6 +3,7 @@ import { AppShell } from "@/components/shell";
 import { RecentViewBeacon } from "@/components/recent-view-beacon";
 import { RepositoryContent } from "@/components/repository-content";
 import { GitHubError, getLanguages, getContributors, getActivity, getRepo } from "@/lib/github/client";
+import { optionalRequest } from "@/lib/github/settle";
 
 export default async function RepoPage({ params }: { params: Promise<{ owner: string; repo: string }> }) {
   const { owner, repo } = await params;
@@ -10,9 +11,9 @@ export default async function RepoPage({ params }: { params: Promise<{ owner: st
   try {
     [repository, languages, contributors, activity] = await Promise.all([
       getRepo(owner, repo),
-      getLanguages(owner, repo),
-      getContributors(owner, repo),
-      getActivity(owner, repo),
+      optionalRequest(getLanguages(owner, repo), {}),
+      optionalRequest(getContributors(owner, repo), []),
+      optionalRequest(getActivity(owner, repo), []),
     ]);
   } catch (e) {
     if (e instanceof GitHubError && e.status === 404) notFound();

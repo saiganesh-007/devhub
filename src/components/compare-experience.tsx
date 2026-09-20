@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeftRight, LoaderCircle, RotateCcw, GitCommit, Tag, CalendarDays } from "lucide-react";
 import type { GitHubRepo, GitHubUser, Contributor } from "@/types/github";
@@ -32,7 +33,7 @@ export function CompareExperience() {
   const lastRan = useRef("");
   const isInitialRender = useRef(true);
 
-  function syncUrl(t: CompareType, sideA: string, sideB: string) {
+  const syncUrl = useCallback((t: CompareType, sideA: string, sideB: string) => {
     const cleanA = sideA.trim();
     const cleanB = sideB.trim();
     if (!cleanA && !cleanB) {
@@ -46,7 +47,7 @@ export function CompareExperience() {
     const qs = query.toString();
     ownUrl.current = qs;
     router.replace(`/compare?${qs}`, { scroll: false });
-  }
+  }, [router]);
 
   const runWith = useCallback(async (t: CompareType, sideA: string, sideB: string, force: boolean) => {
     const signature = `${t}|${sideA.trim()}|${sideB.trim()}`;
@@ -83,35 +84,31 @@ export function CompareExperience() {
   }, [syncUrl]);
 
   useEffect(() => {
-    if (isInitialRender.current) {
-      isInitialRender.current = false;
-      const nextType: CompareType =
-        searchParams.get("type") === "repository" ? "repository" : "developer";
-      const nextA = searchParams.get("a") ?? "";
-      const nextB = searchParams.get("b") ?? "";
-      setType(nextType);
-      setA(nextA);
-      setB(nextB);
-      if (nextA.trim() && nextB.trim()) {
-        void runWith(nextType, nextA, nextB, false);
-      }
-      return;
-    }
-    const fromOwnWrite = ownUrl.current === searchParams.toString();
+    let cancelled = false;
+    const initial = isInitialRender.current;
+    isInitialRender.current = false;
+    const fromOwnWrite = !initial && ownUrl.current === searchParams.toString();
     ownUrl.current = "";
     const nextType: CompareType =
       searchParams.get("type") === "repository" ? "repository" : "developer";
     const nextA = searchParams.get("a") ?? "";
     const nextB = searchParams.get("b") ?? "";
-    setType(nextType);
-    setA(nextA);
-    setB(nextB);
-    if (fromOwnWrite) return;
-    if (nextA.trim() && nextB.trim()) {
-      void runWith(nextType, nextA, nextB, false);
-    } else {
-      setData(emptyResult);
-    }
+
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setType(nextType);
+      setA(nextA);
+      setB(nextB);
+      if (fromOwnWrite) return;
+      if (nextA.trim() && nextB.trim()) {
+        void runWith(nextType, nextA, nextB, false);
+      } else {
+        setData(emptyResult);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [searchParams, runWith]);
 
   function run() {
@@ -143,7 +140,7 @@ export function CompareExperience() {
   }
 
   return (
-    <div>
+    <div className="compare-workbench">
       <Tabs
         label="Comparison type"
         value={type}
@@ -209,6 +206,8 @@ export function CompareExperience() {
         </p>
       )}
 
+      {!data && !loading && !error && <div className="comparison-empty"><span className="text-metadata">Two perspectives. One view.</span><h2>Add two {type === "developer" ? "developers" : "repositories"} to begin.</h2><p>Align public metrics, technology, and activity. Use the differences to inform your own judgment.</p></div>}
+      {loading && <div className="comparison-loading" role="status" aria-label="Loading comparison"><div className="skeleton h-48" /><div className="skeleton h-48" /></div>}
       {data && !loading && (
         <Results type={type} data={data} onRun={run} onSwap={swap} />
       )}
@@ -247,12 +246,12 @@ function Results({
     return (
       <div className="mt-10 space-y-10">
         <div className="grid gap-6 md:grid-cols-2">
-          {[
+          {([
             [first, sa, langA, "A"],
             [second, sb, langB, "B"],
-          ].map(([entry, summary, langs, sideLabel]) => {
-            const d = entry as DevData;
-            const s = summary as ReturnType<typeof summarizeRepositories>;
+          ] as const).map(([entry, summary, langs, sideLabel]) => {
+            const d = entry;
+            const s = summary;
             return (
               <CompareCard key={d.user.login} side={sideLabel} onRefresh={onRun} onSwap={onSwap}>
                 <CardHeader
@@ -282,7 +281,7 @@ function Results({
           })}
         </div>
         <p className="text-xs text-ink3 text-center">
-          Both scores reflect live GitHub data. DevHub never declares a winner —
+          Both profiles reflect live GitHub data. DevHub never declares a winner —
           keep the judgment human.
         </p>
       </div>
@@ -307,6 +306,7 @@ function Results({
     ...d,
     value: totalB > 0 ? Math.round((d.bytes / totalB) * 1000) / 10 : 0,
   }));
+
 
   return (
     <div className="mt-10 space-y-10">
@@ -432,7 +432,7 @@ function ComparisonRow({ label, a, b }: { label: string; a: number; b: number })
       <td className="py-3 font-mono tabular-nums text-ink text-right">{compactNumber(a)}</td>
       <td className="py-3 font-mono tabular-nums text-ink text-right pl-8">{compactNumber(b)}</td>
       <td className="py-3 font-mono tabular-nums text-right pl-8">
-        <span className={diff >= 0 ? "text-ok" : "text-err"}>
+        <span className="text-ink2">
           {diff >= 0 ? "+" : ""}{compactNumber(diff)} ({diffPct >= 0 ? "+" : ""}{diffPct}%)
         </span>
       </td>
@@ -452,7 +452,7 @@ function CompareCard({
   onSwap: () => void;
 }) {
   return (
-    <section className="card-surface p-6">
+    <section className="compare-column card-surface p-6">
       <div className="mb-5 flex items-center justify-between">
         <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink3">
           Side {side}
@@ -486,7 +486,7 @@ function CardHeader({ title, subtitle, avatar }: { title: string; subtitle: stri
     <div className="mb-6">
       {avatar && (
         <div className="mb-4">
-          <img
+          <Image
             src={avatar}
             alt=""
             width={80}

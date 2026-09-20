@@ -6,6 +6,7 @@ import { AuthStatus } from "@/components/auth-status";
 import { ThemeControl } from "@/components/theme/theme-toggle";
 import { MobileHeader } from "@/components/mobile-nav";
 import { NavList } from "@/components/shell-nav";
+import "@/app/workspace.css";
 
 export async function AppShell({
   children,
@@ -17,10 +18,11 @@ export async function AppShell({
   wide?: boolean;
 }) {
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div className="workspace min-h-dvh bg-background text-foreground" data-section={section}>
+      <a className="workspace-skip" href="#workspace-content">Skip to content</a>
       <aside
         aria-label="Application sidebar"
-        className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-surface-1/80 backdrop-blur-xl lg:flex"
+        className="workspace-sidebar fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line lg:flex"
       >
         <div className="flex h-16 items-center border-b border-line px-5">
           <Link href="/" aria-label="DevHub home">
@@ -31,9 +33,10 @@ export async function AppShell({
           <p className="text-metadata px-3 pb-3">Workspace</p>
           <NavList variant="sidebar" />
         </div>
+        <div className="workspace-sidebar-note"><span className="text-metadata">Open source, in context</span><p>People. Repositories.<br />The signals between them.</p><Link href="/search">Start exploring <ArrowRight size={14} /></Link></div>
       </aside>
 
-      <div className="lg:pl-64">
+      <div className="workspace-body lg:pl-64">
         <MobileHeader account={<AuthStatus />} section={section} />
         <header className="sticky top-0 z-30 hidden border-b border-line bg-background/85 backdrop-blur-xl lg:block">
           <div className="mx-auto flex h-16 w-full max-w-[88rem] items-center gap-4 px-6">
@@ -71,17 +74,17 @@ export async function AppShell({
             </div>
           </div>
         </header>
-        <main className={`app-main ${wide ? "max-w-[88rem]" : ""}`}>
+        <main id="workspace-content" tabIndex={-1} className={`app-main ${wide ? "max-w-[88rem]" : ""}`}>
           {children}
         </main>
       </div>
 
-      <nav
+      <div
         aria-label="Primary"
         className="fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-line bg-surface-1/95 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-elevated backdrop-blur lg:hidden"
       >
         <NavList variant="bottom" label="Primary" />
-      </nav>
+      </div>
     </div>
   );
 }

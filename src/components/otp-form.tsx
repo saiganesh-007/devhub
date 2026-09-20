@@ -98,6 +98,7 @@ export function OtpForm() {
       return;
     }
     setStatus("success");
+    window.dispatchEvent(new Event("devhub:auth-success"));
     setTimeout(() => {
       router.push("/dashboard");
       router.refresh();
@@ -159,7 +160,7 @@ export function OtpForm() {
           ))}
         </div>
         <p className="mt-3 font-mono text-[9px] uppercase tracking-[0.12em] text-ink3">
-          Supports 6–8 digit Supabase codes
+          Enter every digit from your email
         </p>
       </fieldset>
 

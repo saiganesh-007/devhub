@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import type { GitHubRepo, GitHubUser } from "@/types/github";
 import { compactNumber, formatDate } from "@/lib/analytics";
-import { ErrorCard, SaveButton, SearchField, Tabs } from "@/components/ui";
+import { ErrorCard, SearchField, Tabs } from "@/components/ui";
+import { SaveButton } from "@/components/save-button";
 
 type Mode = "developers" | "repositories";
 type Item = GitHubUser | GitHubRepo;
@@ -87,8 +88,8 @@ export function SearchExperience() {
   const idle = query.trim().length < 2;
 
   return (
-    <div>
-      <div className="card-surface overflow-hidden rounded-2xl">
+    <div className="search-experience">
+      <div className="search-console">
         <div className="border-b border-line px-4 pt-4 sm:px-6">
           <Tabs
             label="Search scope"
@@ -126,7 +127,7 @@ export function SearchExperience() {
         </div>
 
         <div className="flex items-center justify-between border-t border-line px-5 py-2.5 font-mono text-[9px] uppercase tracking-[0.14em] text-ink3 sm:px-7">
-          <span>GitHub REST / live</span>
+          <span>Public GitHub signals</span>
           <span>{total ? `${compactNumber(total)} results` : "Type at least 2 characters"}</span>
         </div>
       </div>
@@ -160,8 +161,8 @@ export function SearchExperience() {
           </div>
         )}
 
-        {!loading && items.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {!idle && !error && !loading && items.length > 0 && (
+          <div className="search-results">
             {items.map((item) =>
               "login" in item ? (
                 <DeveloperCard key={item.id} item={item} />
@@ -172,7 +173,7 @@ export function SearchExperience() {
           </div>
         )}
 
-        {items.length < total && items.length > 0 && (
+        {!idle && !error && items.length < total && items.length > 0 && (
           <button
             onClick={loadMore}
             disabled={loadingMore}
@@ -202,7 +203,7 @@ async function fetchPage(mode: Mode, query: string, page: number) {
 
 function DeveloperCard({ item }: { item: GitHubUser }) {
   return (
-    <article className="card-surface card-surface--developer p-5 flex flex-col">
+    <article className="result-row result-row--developer">
       <Link
         href={`/developer/${item.login}`}
         className="group flex gap-4"
@@ -292,7 +293,7 @@ function RepositoryCard({ item }: { item: GitHubRepo }) {
   const repoName = item.name;
   
   return (
-    <article className="card-surface card-surface--repository p-5 flex flex-col">
+    <article className="result-row result-row--repository">
       <Link
         href={`/repository/${owner}/${repoName}`}
         className="group flex gap-4"
@@ -462,11 +463,11 @@ function IdleState({ mode, onSearch }: { mode: Mode; onSearch: (q: string) => vo
 
 function SearchSkeleton() {
   return (
-    <div aria-label="Loading search results" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div role="status" aria-label="Loading search results" className="search-results">
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
-          className="card-surface p-5 flex flex-col"
+          className="result-row result-row--loading"
         >
           <div className="flex gap-4">
             <div className="skeleton size-14 rounded-full shrink-0" />

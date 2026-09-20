@@ -20,16 +20,21 @@ export function SaveButton({
   async function save() {
     if (state === "loading" || state === "saved") return;
     setState("loading");
-    const response = await fetch(`/api/favourites/${kind}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (response.status === 401) {
-      router.push("/login");
-      return;
+    try {
+      const response = await fetch(`/api/favourites/${kind}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (response.status === 401) {
+        const next = `${window.location.pathname}${window.location.search}`;
+        router.push(`/login?next=${encodeURIComponent(next)}`);
+        return;
+      }
+      setState(response.ok ? "saved" : "error");
+    } catch {
+      setState("error");
     }
-    setState(response.ok ? "saved" : "error");
   }
 
   return (

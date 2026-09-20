@@ -189,16 +189,21 @@ export function SectionTitle({
 export function ExternalLink({
   href,
   children,
+  className,
 }: {
   href: string;
   children: ReactNode;
+  className?: string;
 }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-1 text-ink2 transition-colors hover:text-brand1"
+      className={cn(
+        "inline-flex items-center gap-1 text-ink2 transition-colors hover:text-brand1",
+        className,
+      )}
     >
       {children}
       <ArrowUpRight size={14} aria-hidden="true" />
@@ -291,6 +296,7 @@ export function Tabs<Value extends string>({
             ? 0
             : tabs.length - 1;
     tabs[next]?.focus();
+    onChange(options[next].value);
   }
 
   return (
@@ -306,6 +312,7 @@ export function Tabs<Value extends string>({
           type="button"
           role="tab"
           aria-selected={value === option.value}
+          tabIndex={value === option.value ? 0 : -1}
           onClick={() => onChange(option.value)}
           className="tab"
         >

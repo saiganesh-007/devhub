@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 
 export const primaryNav = [
-  ["Dashboard", "/dashboard", LayoutDashboard],
+  ["Overview", "/dashboard", LayoutDashboard],
   ["Search", "/search", Search],
   ["Compare", "/compare", GitCompareArrows],
-  ["Favourites", "/favourites", Heart],
+  ["Saved", "/favourites", Heart],
 ] as const;
 
 export function NavList({
@@ -54,7 +54,7 @@ export function NavList({
   }
 
   const items = (
-    variant === "sidebar" ? [...primaryNav, ["Settings", "/settings", Settings]] : [...primaryNav]
+    [...primaryNav, ["Settings", "/settings", Settings]]
   ) as typeof primaryNav;
 
   return (

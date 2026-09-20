@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { BookOpen, ExternalLink as ExternalLinkIcon, GitCommit, Tag } from "lucide-react";
 import { Button, Card, ExternalLink, Metric, SectionTitle, Tabs } from "@/components/ui";
 import { SaveButton } from "@/components/save-button";
@@ -14,6 +15,7 @@ interface Repository {
   owner?: { login: string; avatar_url: string; html_url: string };
   html_url?: string;
   description?: string | null;
+  visibility?: string;
   stargazers_count: number;
   forks_count: number;
   watchers_count?: number;
@@ -67,11 +69,11 @@ export function RepositoryContent({ repository, languages, contributors, activit
   const [activeTab, setActiveTab] = useState<"overview" | "languages" | "contributors" | "activity">("overview");
 
   return (
-    <div>
+    <div className="repository-report">
       {/* Repository Header */}
-      <div className="mt-5 flex flex-col gap-6 border-b border-line pb-12 lg:flex-row lg:items-start lg:justify-between">
+      <div className="repository-hero mt-5 flex flex-col gap-6 border-b border-line pb-12 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex-1 min-w-0">
-          <p className="font-mono text-xs text-ink3">{repository.owner?.login || "unknown"} / repository</p>
+          <p className="font-mono text-xs text-ink3">{(repository.owner?.login ?? "unknown") || "unknown"} / {repository.name}</p>
           <h1 className="mt-2 text-4xl font-semibold tracking-[-.04em] text-ink">{repository.name}</h1>
           {repository.description && (
             <p className="mt-4 max-w-3xl text-base leading-7 text-ink2">{repository.description}</p>
@@ -82,10 +84,10 @@ export function RepositoryContent({ repository, languages, contributors, activit
                 {repository.visibility === "private" ? "🔒" : "🌐"} {repository.visibility}
               </span>
             )}
-            {repository.default_branch && (
+            {(repository.default_branch ?? "main") && (
               <span className="flex items-center gap-1.5 font-mono text-[10px]">
                 <Tag size={12} />
-                {repository.default_branch}
+                {(repository.default_branch ?? "main")}
               </span>
             )}
             <span className="flex items-center gap-1.5 font-mono text-[10px]">
@@ -97,7 +99,7 @@ export function RepositoryContent({ repository, languages, contributors, activit
                 ⚖ {repository.license.name}
               </span>
             )}
-            <ExternalLink href={repository.html_url} className="flex items-center gap-1.5">
+            <ExternalLink href={(repository.html_url ?? "#")} className="flex items-center gap-1.5">
               <ExternalLinkIcon size={14} />
               View on GitHub
             </ExternalLink>
@@ -122,16 +124,16 @@ export function RepositoryContent({ repository, languages, contributors, activit
             kind="repositories"
             payload={{
               github_repo_id: repository.id || 0,
-              owner: repository.owner?.login || "",
+              owner: (repository.owner?.login ?? "unknown") || "",
               repo_name: repository.name,
-              full_name: repository.full_name || `${repository.owner?.login}/${repository.name}`,
+              full_name: (repository.full_name ?? repository.name) || `${(repository.owner?.login ?? "unknown")}/${repository.name}`,
               description: repository.description,
               stars: repository.stargazers_count,
               language: repository.language,
             }}
           />
           <Button
-            href={`/compare?type=repository&a=${repository.owner?.login}/${repository.name}`}
+            href={`/compare?type=repository&a=${(repository.owner?.login ?? "unknown")}/${repository.name}`}
             variant="secondary"
           >
             Compare
@@ -140,10 +142,10 @@ export function RepositoryContent({ repository, languages, contributors, activit
       </div>
 
       {/* Key Metrics */}
-      <div className="mt-10 grid grid-cols-2 border-y border-line py-6 md:grid-cols-3 lg:grid-cols-6">
+      <div className="signal-strip mt-10 grid grid-cols-2 border-y border-line py-6 md:grid-cols-3 lg:grid-cols-6">
         <Metric label="Stars" value={compactNumber(repository.stargazers_count)} />
         <Metric label="Forks" value={compactNumber(repository.forks_count)} />
-        <Metric label="Watchers" value={compactNumber(repository.watchers_count || 0)} />
+        <Metric label="Watchers" value={repository.subscribers_count == null ? "—" : compactNumber(repository.subscribers_count)} />
         <Metric label="Issues" value={compactNumber(repository.open_issues_count || 0)} />
         <Metric label="Size" value={`${compactNumber(repository.size || 0)} KB`} />
         <Metric label="License" value={repository.license?.name || "—"} />
@@ -168,7 +170,7 @@ export function RepositoryContent({ repository, languages, contributors, activit
         {/* Overview Tab */}
         <section id="overview" hidden={activeTab !== "overview"}>
           <SectionTitle eyebrow="Repository Intelligence" title="Overview" />
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="repository-overview grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,.7fr)]">
             <Card variant="repository">
               <div className="space-y-4">
                 <div>
@@ -177,11 +179,11 @@ export function RepositoryContent({ repository, languages, contributors, activit
                 </div>
                 <div>
                   <p className="text-metadata">Default Branch</p>
-                  <p className="text-statistic mt-1 text-base font-mono">{repository.default_branch || "—"}</p>
+                  <p className="text-statistic mt-1 text-base font-mono">{(repository.default_branch ?? "main") || "—"}</p>
                 </div>
                 <div>
                   <p className="text-metadata">Created</p>
-                  <p className="text-statistic mt-1 text-base">{formatDate(repository.created_at)}</p>
+                  <p className="text-statistic mt-1 text-base">{formatDate((repository.created_at ?? repository.updated_at))}</p>
                 </div>
                 <div>
                   <p className="text-metadata">Last Updated</p>
@@ -189,7 +191,7 @@ export function RepositoryContent({ repository, languages, contributors, activit
                 </div>
                 <div>
                   <p className="text-metadata">Last Pushed</p>
-                  <p className="text-statistic mt-1 text-base">{formatDate(repository.pushed_at)}</p>
+                  <p className="text-statistic mt-1 text-base">{formatDate((repository.pushed_at ?? repository.updated_at))}</p>
                 </div>
               </div>
             </Card>
@@ -233,7 +235,7 @@ export function RepositoryContent({ repository, languages, contributors, activit
           <SectionTitle eyebrow="Contributors" title="Core Contributors" action={
             contributors.length > 9 && (
               <ExternalLink
-                href={repository.html_url || `https://github.com/${repository.owner?.login}/${repository.name}`}
+                href={(repository.html_url ?? "#") || `https://github.com/${(repository.owner?.login ?? "unknown")}/${repository.name}`}
                 className="text-sm"
               >
                 View all {contributors.length} on GitHub
@@ -268,7 +270,7 @@ export function RepositoryContent({ repository, languages, contributors, activit
         {/* Activity Tab */}
         <section id="activity" hidden={activeTab !== "activity"}>
           <SectionTitle eyebrow="Activity" title="Recent Commits" action={
-            <ExternalLink href={repository.html_url || `https://github.com/${repository.owner?.login}/${repository.name}`}>
+            <ExternalLink href={(repository.html_url ?? "#") || `https://github.com/${(repository.owner?.login ?? "unknown")}/${repository.name}`}>
               View on GitHub
             </ExternalLink>
           } />

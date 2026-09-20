@@ -1,5 +1,7 @@
 "use client";
 
+import type { PieLabelRenderProps } from "recharts";
+
 import {
   BarChart,
   Bar,
@@ -13,6 +15,7 @@ import {
   Sector,
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { LanguageSignals } from "@/components/language-signals";
 
 interface LanguageData {
   name: string;
@@ -93,11 +96,56 @@ export function RepoLanguagePieChart({ data, className }: RepoLanguageChartProps
   const otherValue = data.slice(7).reduce((sum, d) => sum + d.value, 0);
   const chartData = otherValue > 0 ? [...topLanguages, { name: "Other", value: otherValue, bytes: 0 }] : topLanguages;
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: { cx: number; cy: number; midAngle: number; innerRadius: number; outerRadius: number; percent: number; name: string }) => {
-    if (percent < 0.05) return null;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
-    const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+  const renderCustomizedLabel = (
+    props: PieLabelRenderProps
+  ) => {
+    const {
+      cx,
+      cy,
+      midAngle,
+      innerRadius,
+      outerRadius,
+      percent,
+    } = props;
+
+    if (
+      typeof cx !== "number" ||
+      typeof cy !== "number" ||
+      typeof midAngle !== "number" ||
+      typeof innerRadius !== "number" ||
+      typeof outerRadius !== "number" ||
+      typeof percent !== "number" ||
+      percent < 0.05
+    ) {
+      return null;
+    }
+
+    const radius =
+      innerRadius +
+      (outerRadius - innerRadius) * 0.5;
+
+    const x =
+      cx +
+      radius *
+        Math.cos(
+          -midAngle * (Math.PI / 180)
+        );
+
+    const y =
+      cy +
+      radius *
+        Math.sin(
+          -midAngle * (Math.PI / 180)
+        );
+
+    const name = String(
+      (
+        props as PieLabelRenderProps & {
+          name?: unknown;
+        }
+      ).name ?? ""
+    );
+
     return (
       <text
         x={x}
@@ -108,7 +156,7 @@ export function RepoLanguagePieChart({ data, className }: RepoLanguageChartProps
         fontSize={11}
         fontWeight={500}
       >
-        {name} {percent * 100 >= 1 ? `(${percent * 100}toFixed(1)}%)` : ""}
+        {name} ({(percent * 100).toFixed(1)}%)
       </text>
     );
   };
@@ -142,6 +190,10 @@ export function RepoLanguagePieChart({ data, className }: RepoLanguageChartProps
 }
 
 export function RepoLanguageChart({ data, className }: RepoLanguageChartProps) {
+  return <LanguageSignals data={data} className={className} />;
+}
+
+export function RepoLanguageChartDetailed({ data, className }: RepoLanguageChartProps) {
   if (data.length === 0) return null;
   return (
     <div className={cn("space-y-6", className)}>

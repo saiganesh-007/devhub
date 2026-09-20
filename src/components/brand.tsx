@@ -23,16 +23,10 @@ export function CatMark({
       <Image
         src="/brand/devhub-logo.png"
         alt=""
-        width={Math.round(size * 3)}
-        height={Math.round(size * 3)}
+        width={size * 3}
+        height={size}
         draggable={false}
-        className="select-none"
-        style={{
-          objectFit: "cover",
-          objectPosition: "8% 50%",
-          transform: "scale(2.6)",
-          transformOrigin: "22% 50%",
-        }}
+        className="absolute left-0 top-0 h-full w-[300%] max-w-none select-none object-contain object-left"
       />
     </span>
   );

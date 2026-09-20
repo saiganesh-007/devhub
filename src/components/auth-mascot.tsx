@@ -1,61 +1,63 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { CatMark } from "@/components/brand";
+
+type Mood = "idle" | "identity" | "password" | "confirm" | "error" | "success";
+const copy: Record<Mood, string> = {
+  idle: "Your next discovery starts here.",
+  identity: "Let’s get you to your workspace.",
+  password: "Your secret is safe. I won’t look.",
+  confirm: "One more time, just to be sure.",
+  error: "Something needs another look. Check the message below.",
+  success: "You’re all set. Welcome to DevHub.",
+};
 
 export function AuthMascot() {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [look, setLook] = useState<{ x: number; y: number } | null>(null);
-  const [focus, setFocus] = useState(false);
-  const [shake, setShake] = useState(0);
+  const root = useRef<HTMLDivElement>(null);
+  const art = useRef<HTMLDivElement>(null);
+  const [mood, setMood] = useState<Mood>("idle");
 
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-
-    const onMove = (event: PointerEvent) => {
-      const rect = card.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width - 0.5;
-      const y = (event.clientY - rect.top) / rect.height - 0.5;
-      setLook({ x, y });
-    };
-    const onLeave = () => setLook(null);
-    const onPasswordFocus = () => setFocus(true);
-    const onPasswordBlur = () => setFocus(false);
-    const onError = () => setShake((value) => value + 1);
-
-    card.addEventListener("pointermove", onMove);
-    card.addEventListener("pointerleave", onLeave);
-    window.addEventListener("devhub:password-focus", onPasswordFocus);
-    window.addEventListener("devhub:password-blur", onPasswordBlur);
-    window.addEventListener("devhub:auth-error", onError);
+    const panel = root.current?.closest(".auth-panel");
+    if (!panel) return;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    function focus(event: Event) {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement)) return;
+      setMood(input.name === "confirm" ? "confirm" : input.type === "password" ? "password" : "identity");
+    }
+    function reset() { setMood("idle"); }
+    function error() { setMood("error"); }
+    function success() { setMood("success"); }
+    function move(event: Event) {
+      if (motion.matches || !art.current || !(event instanceof PointerEvent)) return;
+      const box = panel!.getBoundingClientRect();
+      const x = Math.max(-1, Math.min(1, (event.clientX - box.left) / box.width - .5));
+      art.current.style.transform = `rotate(${x * 6}deg)`;
+    }
+    function leave() { if (art.current) art.current.style.transform = ""; }
+    panel.addEventListener("focusin", focus);
+    panel.addEventListener("focusout", reset);
+    panel.addEventListener("pointermove", move);
+    panel.addEventListener("pointerleave", leave);
+    window.addEventListener("devhub:auth-error", error);
+    window.addEventListener("devhub:auth-success", success);
     return () => {
-      card.removeEventListener("pointermove", onMove);
-      card.removeEventListener("pointerleave", onLeave);
-      window.removeEventListener("devhub:password-focus", onPasswordFocus);
-      window.removeEventListener("devhub:password-blur", onPasswordBlur);
-      window.removeEventListener("devhub:auth-error", onError);
+      panel.removeEventListener("focusin", focus);
+      panel.removeEventListener("focusout", reset);
+      panel.removeEventListener("pointermove", move);
+      panel.removeEventListener("pointerleave", leave);
+      window.removeEventListener("devhub:auth-error", error);
+      window.removeEventListener("devhub:auth-success", success);
     };
   }, []);
 
-  const tilt = look
-    ? `rotateY(${9 * look.x}deg) rotateX(${-8 * look.y}deg)`
-    : focus
-      ? "rotate(-4deg) translateY(6px) scale(.96)"
-      : "";
-
-  return (
-    <div ref={cardRef} className="flex justify-center">
-      <div
-        className={`transition-transform duration-200 ease-out ${shake ? "animate-shake" : ""}`}
-        style={tilt ? { transform: tilt, transformStyle: "preserve-3d" } : undefined}
-        key={shake}
-      >
-        <CatMark
-          size={72}
-          className="shadow-[0_14px_40px_-8px_rgba(15,25,47,0.45)]"
-        />
-      </div>
+  return <div ref={root} className="auth-mascot" data-state={mood}>
+    <div ref={art} className="auth-mascot-art" aria-hidden="true">
+      <Image src="/brand/cat-mark.png" alt="" width={92} height={92} priority />
+      <span className="auth-mascot-cover" />
     </div>
-  );
+    <p className="auth-mascot-status" aria-live="polite">{copy[mood]}</p>
+  </div>;
 }
