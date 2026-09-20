@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Clock, GitFork, Heart, Star, User as UserIcon } from "lucide-react";
+import { Clock, Folder, GitCompareArrows, GitFork, Heart, Search, Star, User as UserIcon } from "lucide-react";
 import { AppShell } from "@/components/shell";
 import { Card, Empty, Metric, PageHeader, SectionTitle } from "@/components/ui";
 import { createSupabaseServer } from "@/lib/supabase/server";
@@ -27,6 +27,8 @@ type RecentView = {
   metadata: Record<string, unknown>;
   viewed_at: string;
 };
+type HistoryEvent = { id:string; event_type:"search"|"view"|"comparison"; entity_type:"developer"|"repository"|null; entity_identifier:string; secondary_identifier:string|null; label:string|null; occurred_at:string };
+type Collection = { id:string; name:string; collection_items:{ count:number }[] };
 
 export default async function Dashboard() {
   const supabase = await createSupabaseServer();
@@ -34,6 +36,10 @@ export default async function Dashboard() {
   let developers: SavedDeveloper[] = [];
   let repositories: SavedRepository[] = [];
   let recent: RecentView[] = [];
+  let history: HistoryEvent[] = [];
+  let collections: Collection[] = [];
+  let developerCount = 0;
+  let repositoryCount = 0;
 
   if (supabase) {
     const {
@@ -46,7 +52,7 @@ export default async function Dashboard() {
         "Explorer",
     );
 
-    const [d, r, v] = await Promise.all([
+    const [d, r, v, h, c, dc, rc] = await Promise.all([
       supabase
         .from("favorite_developers")
         .select("*")
@@ -62,10 +68,18 @@ export default async function Dashboard() {
         .select("*")
         .order("viewed_at", { ascending: false })
         .limit(6),
+      supabase.from("history_events").select("*").order("occurred_at", { ascending: false }).limit(8),
+      supabase.from("collections").select("id,name,collection_items(count)").order("updated_at", { ascending: false }).limit(4),
+      supabase.from("favorite_developers").select("id", { count: "exact", head: true }),
+      supabase.from("favorite_repositories").select("id", { count: "exact", head: true }),
     ]);
     developers = d.data || [];
     repositories = r.data || [];
     recent = v.data || [];
+    history = h.data || [];
+    collections = c.data || [];
+    developerCount = dc.count || 0;
+    repositoryCount = rc.count || 0;
   }
 
   return (
@@ -86,10 +100,14 @@ export default async function Dashboard() {
       )}
 
       <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Metric label="Saved developers" value={developers.length} />
-        <Metric label="Saved repositories" value={repositories.length} />
+        <Metric label="Saved developers" value={developerCount} />
+        <Metric label="Saved repositories" value={repositoryCount} />
         <Metric label="Recent views" value={recent.length} />
       </div>
+
+      <div className="mt-12 grid gap-8 lg:grid-cols-2"><section><SectionTitle title="Resume research" />{history.length ? <div className="space-y-2">{history.slice(0, 5).map((event) => { const href = event.event_type === "comparison" ? `/compare?type=${event.entity_type}&a=${encodeURIComponent(event.entity_identifier)}&b=${encodeURIComponent(event.secondary_identifier || "")}` : event.event_type === "search" ? `/search` : event.entity_type === "repository" ? `/repository/${event.entity_identifier}` : `/developer/${event.entity_identifier}`; return <Link key={event.id} href={href} className="card-surface card-surface--interactive flex items-center gap-3 p-4">{event.event_type === "comparison" ? <GitCompareArrows size={16} className="text-brand2" /> : event.event_type === "search" ? <Search size={16} className="text-brand1" /> : <Clock size={16} className="text-brand1" />}<span className="min-w-0 flex-1 truncate text-sm text-ink">{event.label || event.entity_identifier}</span><small className="text-ink3">{formatDate(event.occurred_at)}</small></Link>; })}</div> : <Empty title="No research history" detail="Search, open, or compare GitHub signals to build your workspace history." />}</section><section><SectionTitle title="Collections" action={<Link href="/favourites" className="text-xs text-brand1">Open library</Link>} />{collections.length ? <div className="grid gap-2 sm:grid-cols-2">{collections.map((collection) => <Link key={collection.id} href="/favourites" className="card-surface card-surface--interactive flex items-center gap-3 p-4"><Folder size={16} className="text-brand2" /><span><strong className="block text-sm text-ink">{collection.name}</strong><small className="text-ink3">{collection.collection_items?.[0]?.count ?? 0} items</small></span></Link>)}</div> : <Empty title="No collections" detail="Create a collection in Saved to organize your research." />}</section></div>
+
+      <div className="mt-12"><SectionTitle title="Quick actions" /><div className="flex flex-wrap gap-3"><Link href="/search" className="btn btn-primary"><Search size={15} />Search GitHub</Link><Link href="/compare" className="btn btn-secondary"><GitCompareArrows size={15} />Quick compare</Link><Link href="/favourites" className="btn"><Heart size={15} />Saved research</Link></div></div>
 
       <div className="mt-12 grid gap-8 lg:grid-cols-2">
         <div>

@@ -7,14 +7,16 @@ import { Button, Card, ExternalLink, Metric, SectionTitle } from "@/components/u
 import { SaveButton } from "@/components/save-button";
 import { RecentViewBeacon } from "@/components/recent-view-beacon";
 import { compactNumber, formatDate, summarizeRepositories, languagePercentages } from "@/lib/analytics";
-import { GitHubError, getUser, getUserRepos } from "@/lib/github/client";
+import { GitHubError, getUser, getUserEvents, getUserRepos } from "@/lib/github/client";
 import { LanguageChart } from "@/components/language-chart";
+import { ResearchActions } from "@/components/research-actions";
+import { optionalRequest } from "@/lib/github/settle";
 
 export default async function DeveloperPage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
-  let user, repos;
+  let user, repos, events;
   try {
-    [user, repos] = await Promise.all([getUser(username), getUserRepos(username)]);
+    [user, repos, events] = await Promise.all([getUser(username), getUserRepos(username), optionalRequest(getUserEvents(username), [])]);
   } catch (e) {
     if (e instanceof GitHubError && e.status === 404) notFound();
     throw e;
@@ -114,6 +116,7 @@ export default async function DeveloperPage({ params }: { params: Promise<{ user
           </Button>
         </div>
       </div>
+      <ResearchActions type="developer" identifier={user.login} />
 
       {/* Key Metrics */}
       <div className="signal-strip mt-10 grid grid-cols-2 border-y border-line py-6 md:grid-cols-3 lg:grid-cols-6">
@@ -140,6 +143,13 @@ export default async function DeveloperPage({ params }: { params: Promise<{ user
                   <p className="text-ink3">No language data available for this developer.</p>
                 </div>
               )}
+            </Card>
+          </section>
+
+          <section>
+            <SectionTitle eyebrow="GitHub activity" title="Recent public events" />
+            <Card variant="developer">
+              {events.length ? <ul className="divide-y divide-line">{events.slice(0, 8).map((event) => <li key={event.id} className="flex items-center justify-between gap-4 py-3 text-sm"><span className="min-w-0 truncate text-ink2">{event.type.replace(/Event$/, "")} · {event.repo.name}</span><span className="shrink-0 font-mono text-[10px] text-ink3">{formatDate(event.created_at)}</span></li>)}</ul> : <p className="text-sm text-ink3">No recent public activity available.</p>}
             </Card>
           </section>
 

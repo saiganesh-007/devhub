@@ -9,8 +9,11 @@ import {
   Search,
   Settings,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-export const primaryNav = [
+type NavItem = readonly [string, string, LucideIcon];
+
+export const primaryNav: readonly NavItem[] = [
   ["Overview", "/dashboard", LayoutDashboard],
   ["Search", "/search", Search],
   ["Compare", "/compare", GitCompareArrows],
@@ -53,9 +56,10 @@ export function NavList({
     );
   }
 
-  const items = (
-    [...primaryNav, ["Settings", "/settings", Settings]]
-  ) as typeof primaryNav;
+  const items: readonly NavItem[] = [
+    ...primaryNav,
+    ["Settings", "/settings", Settings],
+  ];
 
   return (
     <nav className="flex flex-col gap-1" aria-label={label}>

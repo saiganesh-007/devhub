@@ -7,6 +7,8 @@ import { Button, Card, ExternalLink, Metric, SectionTitle, Tabs } from "@/compon
 import { SaveButton } from "@/components/save-button";
 import { compactNumber, formatDate } from "@/lib/analytics";
 import { RepoLanguageChart } from "@/components/repo-language-chart";
+import { ResearchActions } from "@/components/research-actions";
+import type { GitHubRelease } from "@/types/github";
 
 interface Repository {
   id?: number;
@@ -53,9 +55,11 @@ interface Props {
   languages: Record<string, number>;
   contributors: Contributor[];
   activity: CommitActivity[];
+  readme: string | null;
+  release: GitHubRelease | null;
 }
 
-export function RepositoryContent({ repository, languages, contributors, activity }: Props) {
+export function RepositoryContent({ repository, languages, contributors, activity, readme, release }: Props) {
   const distribution = Object.entries(languages)
     .map(([name, bytes]) => ({ name, bytes, value: 0 }))
     .sort((a, b) => b.bytes - a.bytes);
@@ -140,6 +144,7 @@ export function RepositoryContent({ repository, languages, contributors, activit
           </Button>
         </div>
       </div>
+      <ResearchActions type="repository" identifier={(repository.full_name ?? `${repository.owner?.login}/${repository.name}`)} />
 
       {/* Key Metrics */}
       <div className="signal-strip mt-10 grid grid-cols-2 border-y border-line py-6 md:grid-cols-3 lg:grid-cols-6">
@@ -214,6 +219,7 @@ export function RepositoryContent({ repository, languages, contributors, activit
               )}
             </Card>
           </div>
+          <div className="mt-6 grid gap-6 lg:grid-cols-2"><Card variant="repository"><p className="text-metadata mb-3">Latest release</p>{release ? <><a href={release.html_url} target="_blank" rel="noreferrer" className="font-medium text-ink hover:text-brand1">{release.name || release.tag_name}</a><p className="mt-2 text-xs text-ink3">{release.prerelease ? "Prerelease" : "Stable release"} · {formatDate(release.published_at || undefined)}</p></> : <p className="text-sm text-ink3">No published release available.</p>}</Card><Card variant="repository"><p className="text-metadata mb-3">README preview</p>{readme ? <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words font-sans text-xs leading-5 text-ink2">{readme}</pre> : <p className="text-sm text-ink3">README unavailable or too large to preview safely.</p>}</Card></div>
         </section>
 
         {/* Languages Tab */}

@@ -2,22 +2,71 @@
 
 import { useEffect } from "react";
 
-export function RecentViewBeacon({ type, identifier, metadata }: {
+import {
+  recordLocalHistory,
+} from "@/lib/workspace";
+
+type Props = {
   type: "developer" | "repository";
   identifier: string;
   metadata: Record<string, unknown>;
-}) {
-  const metadataKey = JSON.stringify(metadata);
+};
+
+export function RecentViewBeacon({
+  type,
+  identifier,
+  metadata,
+}: Props) {
+  const metadataKey =
+    JSON.stringify(metadata);
+
   useEffect(() => {
-    const controller = new AbortController();
+    const stableMetadata =
+      JSON.parse(
+        metadataKey
+      ) as Record<string, unknown>;
+
+    recordLocalHistory({
+      kind: "view",
+      entityType: type,
+      identifier,
+      label:
+        typeof stableMetadata.name ===
+        "string"
+          ? stableMetadata.name
+          : identifier,
+      metadata: stableMetadata,
+    });
+
+    /*
+     * This is a non-critical history beacon.
+     *
+     * Do not abort it during navigation.
+     * keepalive lets the browser finish the request
+     * even when the page is transitioning.
+     */
     void fetch("/api/recent-views", {
       method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ entity_type: type, entity_identifier: identifier, metadata: JSON.parse(metadataKey) }),
-      signal: controller.signal,
-    }).catch(() => undefined);
-    return () => controller.abort();
-  }, [identifier, metadataKey, type]);
+      headers: {
+        "content-type":
+          "application/json",
+      },
+      body: JSON.stringify({
+        entity_type: type,
+        entity_identifier:
+          identifier,
+        metadata: stableMetadata,
+      }),
+      keepalive: true,
+    }).catch(() => {
+      // Recent-view persistence must never
+      // crash the product experience.
+    });
+  }, [
+    identifier,
+    metadataKey,
+    type,
+  ]);
+
   return null;
 }
-

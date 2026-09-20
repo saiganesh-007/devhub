@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { BrandLockup } from "@/components/brand";
 import { AuthStatus } from "@/components/auth-status";
 import { ThemeControl } from "@/components/theme/theme-toggle";
 import { MobileHeader } from "@/components/mobile-nav";
 import { NavList } from "@/components/shell-nav";
+import { FavouritesProvider } from "@/components/favourites-provider";
+import { GlobalSearch } from "@/components/global-search";
 import "@/app/workspace.css";
 
 export async function AppShell({
@@ -18,6 +20,7 @@ export async function AppShell({
   wide?: boolean;
 }) {
   return (
+    <FavouritesProvider>
     <div className="workspace min-h-dvh bg-background text-foreground" data-section={section}>
       <a className="workspace-skip" href="#workspace-content">Skip to content</a>
       <aside
@@ -56,17 +59,7 @@ export async function AppShell({
               </ol>
             </nav>
             <div className="flex min-w-0 flex-1 justify-center">
-              <Link
-                href="/search"
-                aria-label="Go to search developers and repositories"
-                className="search-shortcut"
-              >
-                <Search size={16} aria-hidden="true" />
-                <span className="truncate">Search developers or repositories</span>
-                <span className="search-shortcut__action" aria-hidden="true">
-                  <ArrowRight size={14} />
-                </span>
-              </Link>
+              <GlobalSearch />
             </div>
             <div className="ml-auto flex shrink-0 items-center gap-3">
               <AuthStatus />
@@ -86,6 +79,7 @@ export async function AppShell({
         <NavList variant="bottom" label="Primary" />
       </div>
     </div>
+    </FavouritesProvider>
   );
 }
 

@@ -4,11 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeftRight, LoaderCircle, RotateCcw, GitCommit, Tag, CalendarDays } from "lucide-react";
-import type { GitHubRepo, GitHubUser, Contributor } from "@/types/github";
+import type { GitHubRepo, GitHubUser, Contributor, GitHubRelease } from "@/types/github";
 import { compactNumber, formatDate, summarizeRepositories, languagePercentages } from "@/lib/analytics";
-import { Tabs, TextInput } from "@/components/ui";
+import { Tabs } from "@/components/ui";
 import { RepoLanguageChart } from "@/components/repo-language-chart";
 import { LanguageChart } from "@/components/language-chart";
+import { EntityAutocomplete } from "@/components/entity-autocomplete";
+import { recordLocalHistory } from "@/lib/workspace";
 
 type CompareType = "developer" | "repository";
 type DevData = { user: GitHubUser; repositories: GitHubRepo[] };
@@ -16,6 +18,7 @@ type RepoData = {
   repository: GitHubRepo;
   contributors: Contributor[];
   languages: Record<string, number>;
+  release?: GitHubRelease | null;
 };
 
 const emptyResult: [DevData | RepoData, DevData | RepoData] | null = null;
@@ -76,6 +79,7 @@ export function CompareExperience() {
       );
       setData(result as [DevData | RepoData, DevData | RepoData]);
       syncUrl(t, sideA, sideB);
+      recordLocalHistory({ kind: "comparison", entityType: t, identifier: sideA.trim(), secondaryIdentifier: sideB.trim(), label: `${sideA.trim()} vs ${sideB.trim()}` });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Comparison failed");
     } finally {
@@ -124,6 +128,12 @@ export function CompareExperience() {
     syncUrl(type, "", "");
   }
 
+  function clearSide(side: "a" | "b") {
+    if (side === "a") setA(""); else setB("");
+    setData(emptyResult); setError(""); lastRan.current = "";
+    syncUrl(type, side === "a" ? "" : a, side === "b" ? "" : b);
+  }
+
   function swap() {
     setA(b);
     setB(a);
@@ -152,12 +162,11 @@ export function CompareExperience() {
       />
 
       <div className="mt-6 grid items-end gap-3 md:grid-cols-[1fr_auto_1fr]">
-        <TextInput
+        <EntityAutocomplete
           label={`First ${type}`}
+          type={type}
           value={a}
           onChange={setA}
-          autoComplete="off"
-          spellCheck={false}
           placeholder={type === "developer" ? "torvalds" : "facebook/react"}
         />
 
@@ -170,6 +179,8 @@ export function CompareExperience() {
           >
             <ArrowLeftRight size={16} aria-hidden="true" />
           </button>
+          <button type="button" onClick={() => clearSide("a")} aria-label="Clear first side" className="btn-icon">A×</button>
+          <button type="button" onClick={() => clearSide("b")} aria-label="Clear second side" className="btn-icon">B×</button>
           <button
             type="button"
             onClick={clear}
@@ -180,12 +191,11 @@ export function CompareExperience() {
           </button>
         </div>
 
-        <TextInput
+        <EntityAutocomplete
           label={`Second ${type}`}
+          type={type}
           value={b}
           onChange={setB}
-          autoComplete="off"
-          spellCheck={false}
           placeholder={type === "developer" ? "gaearon" : "vuejs/core"}
         />
       </div>
@@ -270,6 +280,8 @@ function Results({
                 <FooterRow>
                   Primary language: <b>{s.languages[0]?.name || "—"}</b>
                 </FooterRow>
+                <FooterRow>Most starred: <b>{s.mostStarred?.name || "—"}</b> · Recently updated: <b>{[...d.repositories].sort((x,y) => +new Date(y.updated_at) - +new Date(x.updated_at))[0]?.name || "—"}</b></FooterRow>
+                {(d.user.company || d.user.location) && <FooterRow>{[d.user.company, d.user.location].filter(Boolean).join(" · ")}</FooterRow>}
                 {langs.length > 0 && (
                   <div className="mt-6">
                     <p className="text-metadata mb-3">Language Distribution</p>
@@ -326,10 +338,12 @@ function Results({
               <Metric label="Stars" value={compactNumber(d.repository.stargazers_count)} />
               <Metric label="Forks" value={compactNumber(d.repository.forks_count)} />
               <Metric label="Watchers" value={compactNumber(d.repository.watchers_count || 0)} />
+              <Metric label="Subscribers" value={compactNumber(d.repository.subscribers_count || 0)} />
               <Metric label="Issues" value={compactNumber(d.repository.open_issues_count || 0)} />
               <Metric label="Contributors" value={d.contributors.length} />
               <Metric label="Size" value={`${compactNumber(d.repository.size || 0)} KB`} />
             </div>
+            <div className="mt-4 text-sm text-ink3">Created {formatDate(d.repository.created_at)} · Pushed {formatDate(d.repository.pushed_at)} · Branch <b>{d.repository.default_branch || "—"}</b>{d.release ? <> · Release <a href={d.release.html_url} target="_blank" rel="noreferrer" className="text-brand1">{d.release.name || d.release.tag_name}</a></> : null}</div>
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-ink3">
               {d.repository.language && (
                 <span className="flex items-center gap-1">

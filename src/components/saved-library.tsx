@@ -1,0 +1,24 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { GitCompareArrows, Search } from "lucide-react";
+import { RemoveFavouriteButton } from "@/components/remove-favourite-button";
+import { ResearchActions } from "@/components/research-actions";
+
+export type SavedDeveloper = { id: string; github_username: string; developer_name: string | null; avatar_url: string | null; created_at: string };
+export type SavedRepository = { id: string; owner: string; repo_name: string; full_name: string; description: string | null; stars: number; language: string | null; created_at: string };
+
+export function SavedLibrary({ developers, repositories }: { developers: SavedDeveloper[]; repositories: SavedRepository[] }) {
+  const [query, setQuery] = useState("");
+  const [type, setType] = useState<"all" | "developer" | "repository">("all");
+  const [sort, setSort] = useState<"recent" | "name" | "stars">("recent");
+  const filteredDevelopers = useMemo(() => developers.filter((item) => type !== "repository" && `${item.developer_name} ${item.github_username}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => sort === "name" ? (a.developer_name || a.github_username).localeCompare(b.developer_name || b.github_username) : +new Date(b.created_at) - +new Date(a.created_at)), [developers, query, sort, type]);
+  const filteredRepositories = useMemo(() => repositories.filter((item) => type !== "developer" && `${item.full_name} ${item.description || ""} ${item.language || ""}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => sort === "name" ? a.full_name.localeCompare(b.full_name) : sort === "stars" ? b.stars - a.stars : +new Date(b.created_at) - +new Date(a.created_at)), [repositories, query, sort, type]);
+  return <><div className="mt-8 grid gap-3 rounded-2xl border border-line bg-panel/30 p-4 sm:grid-cols-[1fr_auto_auto]"><label className="relative"><span className="sr-only">Search saved items</span><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink3" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search saved research" className="h-10 w-full rounded-xl border border-line bg-background pl-9 pr-3 text-sm text-ink" /></label><select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="h-10 rounded-xl border border-line bg-background px-3 text-sm text-ink"><option value="all">All types</option><option value="developer">Developers</option><option value="repository">Repositories</option></select><select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="h-10 rounded-xl border border-line bg-background px-3 text-sm text-ink"><option value="recent">Recently saved</option><option value="name">Name</option><option value="stars">Stars</option></select></div>
+    <div className="mt-8 grid gap-4 lg:grid-cols-2">{filteredDevelopers.map((item) => <article key={item.id} className="card-surface p-4"><div className="flex items-center gap-3">{item.avatar_url && <Image src={item.avatar_url} alt="" width={42} height={42} className="size-[42px] rounded-full" />}<Link className="min-w-0 flex-1" href={`/developer/${item.github_username}`}><strong className="block truncate text-sm text-ink">{item.developer_name || item.github_username}</strong><small className="text-ink3">@{item.github_username}</small></Link><Link href={`/compare?type=developer&a=${item.github_username}`} className="btn btn-sm btn-secondary"><GitCompareArrows size={14} />Compare</Link><RemoveFavouriteButton endpoint={`/api/favourites/developers/${item.github_username}`} label={item.github_username} type="developer" identifier={item.github_username} /></div><ResearchActions type="developer" identifier={item.github_username} /></article>)}
+    {filteredRepositories.map((item) => <article key={item.id} className="card-surface p-4"><div className="flex items-center gap-3"><Link className="min-w-0 flex-1" href={`/repository/${item.owner}/${item.repo_name}`}><strong className="block truncate text-sm text-ink">{item.full_name}</strong><small className="block truncate text-ink3">{item.language || "Mixed"} · {item.stars.toLocaleString()} stars</small></Link><Link href={`/compare?type=repository&a=${item.full_name}`} className="btn btn-sm btn-secondary"><GitCompareArrows size={14} />Compare</Link><RemoveFavouriteButton endpoint={`/api/favourites/repositories/${item.id}`} label={item.full_name} type="repository" identifier={item.full_name} /></div><ResearchActions type="repository" identifier={item.full_name} /></article>)}</div>
+    {!filteredDevelopers.length && !filteredRepositories.length && <p className="mt-10 text-center text-sm text-ink3">No saved research matches these filters.</p>}
+  </>;
+}

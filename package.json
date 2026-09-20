@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test src/lib/analytics.test.ts src/lib/otp.test.ts src/lib/navigation.test.ts src/lib/github/settle.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/*.test.ts src/lib/github/*.test.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

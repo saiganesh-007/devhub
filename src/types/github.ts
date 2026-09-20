@@ -3,4 +3,6 @@ export interface GitHubRepo { id?:number; name:string; full_name?:string; owner?
 export interface Contributor { login:string; avatar_url:string; html_url:string; contributions:number }
 export interface SearchResult<T> { total_count:number; items:T[] }
 export interface RateLimit { limit:number; remaining:number; reset:number }
+export interface GitHubRelease { name:string|null; tag_name:string; html_url:string; published_at:string|null; prerelease:boolean; draft:boolean }
+export interface GitHubReadme { content:string; encoding:string; size:number; html_url:string|null }
 
