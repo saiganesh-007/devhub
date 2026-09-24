@@ -183,13 +183,13 @@ export default async function DeveloperPage({ params }: { params: Promise<{ user
                   {languageDistribution[0]?.name || "—"}
                 </p>
               </Card>
-              <Card variant="metric" className="sm:col-span-2 lg:col-span-4">
+              <Card variant="metric" className="sm:col-span-2">
                 <p className="text-metadata">Total Repository Size</p>
                 <p className="text-statistic mt-2">
                   {compactNumber(repos.reduce((sum, r) => sum + (r.size || 0), 0))} KB
                 </p>
               </Card>
-              <Card variant="metric" className="sm:col-span-2 lg:col-span-4">
+              <Card variant="metric" className="sm:col-span-2">
                 <p className="text-metadata">Total Open Issues (tracked)</p>
                 <p className="text-statistic mt-2">
                   {compactNumber(repos.reduce((sum, r) => sum + (r.open_issues_count || 0), 0))}

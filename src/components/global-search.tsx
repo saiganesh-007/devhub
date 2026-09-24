@@ -183,7 +183,7 @@ export function GlobalSearch({
 
     const trimmed = query.trim();
     const prefs = getSearchPrefs();
-    if (!prefs.suggestionsEnabled || trimmed.length < 1) {
+    if (!prefs.suggestionsEnabled || trimmed.length < 3) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([]);
       setLoading(false);
@@ -216,7 +216,7 @@ export function GlobalSearch({
       } finally {
         if (requestRef.current === id) setLoading(false);
       }
-    }, 250);
+    }, 650);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -285,7 +285,7 @@ export function GlobalSearch({
 
   const devs = suggestions.filter((s) => s.kind === "developer");
   const repos = suggestions.filter((s) => s.kind === "repository");
-  const showDropdown = open && query.trim().length >= 1;
+  const showDropdown = open && query.trim().length >= 3;
   const activeId =
     active >= 0 && suggestions[active]
       ? `global-search-option-${baseId}-${active}`
@@ -317,8 +317,8 @@ export function GlobalSearch({
           }}
           onFocus={() => {
             setFocused(true);
-            if (query.trim().length >= 1 && suggestions.length > 0) setOpen(true);
-            else if (query.trim().length >= 1) setOpen(true);
+            if (query.trim().length >= 3 && suggestions.length > 0) setOpen(true);
+            else if (query.trim().length >= 3) setOpen(true);
           }}
           onBlur={() => setFocused(false)}
           onKeyDown={onKeyDown}
@@ -534,7 +534,7 @@ export function CompareCombobox({
     abortRef.current?.abort();
     const trimmed = value.trim();
     const prefs = getSearchPrefs();
-    if (!prefs.suggestionsEnabled || trimmed.length < 1) {
+    if (!prefs.suggestionsEnabled || trimmed.length < 3) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([]);
       setLoading(false);
@@ -568,7 +568,7 @@ export function CompareCombobox({
       } finally {
         if (requestRef.current === id) setLoading(false);
       }
-    }, 250);
+    }, 650);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
@@ -601,7 +601,7 @@ export function CompareCombobox({
     }
   }
 
-  const showDropdown = open && value.trim().length >= 1;
+  const showDropdown = open && value.trim().length >= 3;
   const activeId =
     active >= 0 && suggestions[active]
       ? `compare-combo-option-${baseId}-${active}`
@@ -639,7 +639,7 @@ export function CompareCombobox({
           }}
           onFocus={() => {
             setFocused(true);
-            if (value.trim().length >= 1) setOpen(true);
+            if (value.trim().length >= 3) setOpen(true);
           }}
           onBlur={() => setFocused(false)}
           onKeyDown={onKeyDown}

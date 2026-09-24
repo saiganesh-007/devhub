@@ -71,7 +71,7 @@ export function SearchExperience() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (query.trim().length < 1) return;
+    if (query.trim().length < 3) return;
     const id = ++request.current;
     const timer = setTimeout(async () => {
       setLoading(true);
@@ -88,7 +88,7 @@ export function SearchExperience() {
       } finally {
         if (id === request.current) setLoading(false);
       }
-    }, 350);
+    }, 650);
     return () => clearTimeout(timer);
   }, [query, mode]);
 
@@ -115,7 +115,7 @@ export function SearchExperience() {
     }
   }
 
-  const idle = query.trim().length < 1;
+  const idle = query.trim().length < 3;
 
   return (
     <div className="search-experience">

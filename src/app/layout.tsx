@@ -4,6 +4,7 @@ import "./globals.css";
 import "./landing.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { ThemeScript } from "@/components/theme/theme-script";
+import { FavouritesProvider } from "@/components/favourites-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,7 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
 
       <body className="min-h-dvh">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <FavouritesProvider>{children}</FavouritesProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
