@@ -2,7 +2,7 @@
 // The dark-theme architecture is preserved in globals.css and the provider
 // for later work — this script intentionally ignores stored preferences
 // and OS color-scheme detection.
-const script = /* js */ `(function(){try{document.documentElement.dataset.theme="light";document.documentElement.style.colorScheme="light"}}catch(e){}})();`;
+const script = /* js */ `(function(){try{document.documentElement.dataset.theme="light";document.documentElement.style.colorScheme="light";document.documentElement.classList.remove("dark");}catch(e){}})();`;
 
 export function ThemeScript() {
   return <script dangerouslySetInnerHTML={{ __html: script }} />;
