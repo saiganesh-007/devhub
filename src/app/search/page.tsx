@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AppShell, RateBadge } from "@/components/shell";
 import { PageHeader } from "@/components/ui";
@@ -15,7 +16,9 @@ export default function SearchPage() {
           description="Find developers and repositories, then inspect what the numbers mean."
         />
       </div>
-      <SearchExperience />
+      <Suspense fallback={<div className="skeleton h-40" />}>
+        <SearchExperience />
+      </Suspense>
     </AppShell>
   );
 }

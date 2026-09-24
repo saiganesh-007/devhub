@@ -12,8 +12,8 @@ export function LandingHero() {
           text="DEVHUB"
           layers={30}
           depth={1.9}
-          faceColor="#eef5ff"
-          depthColor="#7c3aed"
+          faceColor="#171416"
+          depthColor="#861f3d"
           tilt={7.5}
           perspective={900}
           autoOrbit={true}

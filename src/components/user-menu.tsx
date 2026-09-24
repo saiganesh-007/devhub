@@ -5,17 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Settings, ChevronDown } from "lucide-react";
 import { logout } from "@/app/actions/auth";
+import { UserAvatar } from "@/components/user-avatar";
 
-function initialsOf(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
-export function UserMenu({ name }: { name: string }) {
+export function UserMenu({
+  name,
+  avatarUrl,
+  providerUrl,
+}: {
+  name: string;
+  avatarUrl?: string | null;
+  providerUrl?: string | null;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -84,12 +84,7 @@ export function UserMenu({ name }: { name: string }) {
         className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-panel py-1.5 pl-1.5 pr-2.5 text-ink transition-colors hover:border-line2"
         aria-label={`Account menu for ${name}`}
       >
-        <span
-          aria-hidden="true"
-          className="grid size-8 place-items-center rounded-full bg-gradient-to-br from-brand1 to-brand2 text-[11px] font-bold text-primary-foreground"
-        >
-          {initialsOf(name)}
-        </span>
+        <UserAvatar name={name} src={avatarUrl} providerSrc={providerUrl} size={32} />
         <span className="hidden max-w-28 truncate text-xs font-medium xl:block">
           {name}
         </span>

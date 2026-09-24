@@ -1,0 +1,55 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4 theme variables block",
+      "references": [
+        {
+          "name": "Tailwind CSS @theme",
+          "url": "https://tailwindcss.com/docs/functions-and-directives#theme"
+        }
+      ]
+    },
+    {
+      "name": "@utility",
+      "description": "Tailwind CSS v4 user-defined utility",
+      "references": [
+        {
+          "name": "Tailwind CSS @utility",
+          "url": "https://tailwindcss.com/docs/adding-custom-styles#adding-custom-utilities"
+        }
+      ]
+    },
+    {
+      "name": "@layer",
+      "description": "Tailwind CSS cascade layer",
+      "references": [
+        {
+          "name": "Tailwind CSS @layer",
+          "url": "https://tailwindcss.com/docs/adding-custom-styles#using-css-and-layer"
+        }
+      ]
+    },
+    {
+      "name": "@source",
+      "description": "Tailwind CSS source configuration",
+      "references": [
+        {
+          "name": "Tailwind CSS @source",
+          "url": "https://tailwindcss.com/docs/functions-and-directives#source"
+        }
+      ]
+    },
+    {
+      "name": "@tailwind",
+      "description": "Tailwind CSS import directive",
+      "references": [
+        {
+          "name": "Tailwind CSS @tailwind",
+          "url": "https://tailwindcss.com/docs/functions-and-directives#tailwind"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -30,8 +31,24 @@ const suggestions = {
 } as const;
 
 export function SearchExperience() {
-  const [mode, setMode] = useState<Mode>("developers");
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const initialQ = searchParams.get("q") ?? "";
+  const initialType = searchParams.get("type");
+  const [mode, setMode] = useState<Mode>(() => {
+    if (initialType === "repositories" || initialType === "developers")
+      return initialType;
+    if (typeof window !== "undefined") {
+      try {
+        const stored = window.localStorage.getItem("devhub:search-prefs");
+        const parsed = stored ? (JSON.parse(stored) as { defaultSearchType?: string }) : null;
+        if (parsed?.defaultSearchType === "repositories") return "repositories";
+      } catch {
+        // Fall through to default.
+      }
+    }
+    return "developers";
+  });
+  const [query, setQuery] = useState(initialQ);
   const [items, setItems] = useState<Item[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -40,8 +57,21 @@ export function SearchExperience() {
   const [error, setError] = useState("");
   const request = useRef(0);
 
+  // Keep the field in sync when arriving via global search (?q= / ?type=).
+  const lastSyncedQ = useRef<string | null>(null);
   useEffect(() => {
-    if (query.trim().length < 2) return;
+    const q = searchParams.get("q") ?? "";
+    const t = searchParams.get("type");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (t === "developers" || t === "repositories") setMode(t);
+    if (q && lastSyncedQ.current !== q) {
+      lastSyncedQ.current = q;
+      setQuery(q);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (query.trim().length < 1) return;
     const id = ++request.current;
     const timer = setTimeout(async () => {
       setLoading(true);
@@ -85,7 +115,7 @@ export function SearchExperience() {
     }
   }
 
-  const idle = query.trim().length < 2;
+  const idle = query.trim().length < 1;
 
   return (
     <div className="search-experience">
@@ -128,7 +158,7 @@ export function SearchExperience() {
 
         <div className="flex items-center justify-between border-t border-line px-5 py-2.5 font-mono text-[9px] uppercase tracking-[0.14em] text-ink3 sm:px-7">
           <span>Public GitHub signals</span>
-          <span>{total ? `${compactNumber(total)} results` : "Type at least 2 characters"}</span>
+          <span>{total ? `${compactNumber(total)} results` : "Type to search"}</span>
         </div>
       </div>
 
@@ -189,12 +219,24 @@ export function SearchExperience() {
 }
 
 async function fetchPage(mode: Mode, query: string, page: number) {
+  let perPage = 12;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = window.localStorage.getItem("devhub:search-prefs");
+      const parsed = stored ? (JSON.parse(stored) as { resultsPerPage?: number }) : null;
+      if (parsed?.resultsPerPage === 10 || parsed?.resultsPerPage === 20 || parsed?.resultsPerPage === 30) {
+        perPage = parsed.resultsPerPage;
+      }
+    } catch {
+      // Keep default page size.
+    }
+  }
   const base =
     mode === "developers"
       ? "/api/github/users/search"
       : "/api/github/repositories/search";
   const res = await fetch(
-    `${base}?q=${encodeURIComponent(query)}&page=${page}`,
+    `${base}?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`,
   );
   const body = await res.json();
   if (!res.ok) throw new Error(body.error?.message || "Search failed");

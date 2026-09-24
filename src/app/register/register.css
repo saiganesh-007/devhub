@@ -1,0 +1,279 @@
+/* Register — small deltas on top of the shared login design system.
+   The page reuses login.css wholesale (same root id + class language);
+   everything below is scoped under .register-mode so login is untouched. */
+
+/* Slightly more welcoming light: a touch more wine presence. */
+.register-mode .login-light-cyan {
+  opacity: 0.9;
+}
+
+/* Supporting copy under the heading. */
+.register-sub {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--login-ink-2);
+  max-width: 40ch;
+}
+
+/* The register form carries four fields, so it runs a little taller. */
+.register-mode .login-form {
+  gap: 18px;
+  max-width: 420px;
+  margin-top: 22px;
+}
+
+/* Mascot sits slightly higher to balance the taller form. Margin (not
+   transform) so it never fights the mascot's ref-driven motion. */
+@media (min-width: 901px) {
+  .register-mode .lm-wrap {
+    margin-top: -28px;
+  }
+}
+
+/* A touch more energy on the primary action. */
+.register-mode .login-primary {
+  box-shadow:
+    0 12px 34px rgba(74, 16, 32, 0.22),
+    0 0 0 1px rgba(134, 31, 61, 0.12);
+}
+
+/* ---------- compact password requirements ---------- */
+.register-mode .pw-req {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.register-mode .pw-req li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--login-ink-3);
+  transition: color 160ms ease;
+}
+
+.register-mode .pw-req li[data-ok="true"] {
+  color: var(--login-ok);
+}
+
+.register-mode .pw-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(74, 16, 32, 0.2);
+  display: inline-grid;
+  place-items: center;
+  color: #ffffff;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.register-mode .pw-req li[data-ok="true"] .pw-dot {
+  background: var(--login-ok);
+  border-color: var(--login-ok);
+}
+
+/* ---------- understated confirm states ---------- */
+.register-mode .pw-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.register-mode .pw-hint.is-ok {
+  color: var(--login-ok);
+}
+
+.register-mode .pw-hint.is-warn {
+  color: var(--login-ink-3);
+}
+
+.register-mode .login-input.is-match {
+  border-color: rgba(134, 31, 61, 0.45);
+}
+
+.register-mode .login-input.is-match:focus {
+  border-color: #861f3d;
+  box-shadow: 0 0 0 3px rgba(134, 31, 61, 0.07);
+}
+
+.register-mode .login-input.is-mismatch {
+  border-color: rgba(109, 26, 49, 0.4);
+}
+
+.register-mode .login-input.is-mismatch:focus {
+  border-color: #6d1a31;
+  box-shadow: 0 0 0 3px rgba(134, 31, 61, 0.07);
+}
+
+/* ---------- register mascot moods (same lm-* system as login) ---------- */
+
+/* Name: welcoming tilt, perked ears, attentive mouth. */
+.register-mode .lm-wrap[data-mood="name"] .lm-mood-tilt {
+  transform: rotate(5deg) translateY(-2px);
+}
+
+.register-mode .lm-wrap[data-mood="name"] .lm-ear-l {
+  transform: rotate(-10deg) translateY(-3px);
+}
+
+.register-mode .lm-wrap[data-mood="name"] .lm-ear-r {
+  transform: rotate(10deg) translateY(-3px);
+}
+
+.register-mode .lm-wrap[data-mood="name"] .lm-mouth-idle {
+  opacity: 0;
+}
+
+.register-mode .lm-wrap[data-mood="name"] .lm-mouth-attentive {
+  opacity: 1;
+}
+
+.register-mode .lm-wrap[data-mood="name"] .lm-pupil {
+  transform: scale(1.14);
+}
+
+.register-mode .lm-wrap[data-mood="name"] .lm-line {
+  color: var(--login-cyan-strong);
+}
+
+/* Confirm: same privacy paws as the password state. */
+.register-mode .lm-wrap[data-mood="confirm"] .lm-paws {
+  opacity: 1;
+}
+
+.register-mode .lm-wrap[data-mood="confirm"] .lm-paw-l,
+.register-mode .lm-wrap[data-mood="confirm"] .lm-paw-r {
+  transform: translate(0, 0);
+}
+
+/* Match: happy — ears perk, cheerful mouth. */
+.register-mode .lm-wrap[data-mood="match"] .lm-mood-tilt {
+  transform: rotate(-3deg);
+}
+
+.register-mode .lm-wrap[data-mood="match"] .lm-ear-l,
+.register-mode .lm-wrap[data-mood="match"] .lm-ear-r {
+  transform: translateY(-4px);
+}
+
+.register-mode .lm-wrap[data-mood="match"] .lm-mouth-idle {
+  opacity: 0;
+}
+
+.register-mode .lm-wrap[data-mood="match"] .lm-mouth-happy {
+  opacity: 1;
+}
+
+.register-mode .lm-wrap[data-mood="match"] .lm-pupil {
+  transform: scale(0.96, 0.82);
+}
+
+.register-mode .lm-wrap[data-mood="match"] .lm-line {
+  color: var(--login-cyan-strong);
+}
+
+/* Mismatch: puzzled — slight head tilt, concerned mouth, brows. */
+.register-mode .lm-wrap[data-mood="mismatch"] .lm-mood-tilt {
+  transform: rotate(-6deg);
+}
+
+.register-mode .lm-wrap[data-mood="mismatch"] .lm-mouth-idle {
+  opacity: 0;
+}
+
+.register-mode .lm-wrap[data-mood="mismatch"] .lm-mouth-concerned,
+.register-mode .lm-wrap[data-mood="mismatch"] .lm-brows {
+  opacity: 1;
+}
+
+/* Valid: visibly excited — perked ears, happy mouth, gentle bounce. */
+.register-mode .lm-wrap[data-mood="valid"] .lm-ear-l,
+.register-mode .lm-wrap[data-mood="valid"] .lm-ear-r {
+  transform: translateY(-4px);
+}
+
+.register-mode .lm-wrap[data-mood="valid"] .lm-mouth-idle {
+  opacity: 0;
+}
+
+.register-mode .lm-wrap[data-mood="valid"] .lm-mouth-happy {
+  opacity: 1;
+}
+
+.register-mode .lm-wrap[data-mood="valid"] .lm-pupil {
+  transform: scale(0.96, 0.82);
+}
+
+.register-mode .lm-wrap[data-mood="valid"] .lm-stage {
+  animation: lm-excited 1.6s ease-in-out infinite;
+}
+
+.register-mode .lm-wrap[data-mood="valid"] .lm-line {
+  color: var(--login-cyan-strong);
+}
+
+@keyframes lm-excited {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Success: happy celebration (login shows the calm-attentive mouth). */
+.register-mode .lm-wrap[data-mood="success"] .lm-mouth-attentive {
+  opacity: 0;
+}
+
+.register-mode .lm-wrap[data-mood="success"] .lm-mouth-happy {
+  opacity: 1;
+}
+
+.register-mode .lm-wrap[data-mood="success"] .lm-ear-l,
+.register-mode .lm-wrap[data-mood="success"] .lm-ear-r {
+  transform: translateY(-4px);
+}
+
+/* ---------- visible keyboard focus ---------- */
+.register-mode .login-primary:focus-visible,
+.register-mode .login-visibility:focus-visible,
+.register-mode .login-home:focus-visible,
+.register-mode .login-link-strong:focus-visible,
+.register-mode .login-brand:focus-visible {
+  outline: 2px solid rgba(134, 31, 61, 0.5);
+  outline-offset: 3px;
+}
+
+.register-mode .login-visibility:focus-visible {
+  border-radius: 10px;
+}
+
+/* ---------- responsive: reuse the login collapse, tidy the form ---------- */
+@media (max-width: 900px) {
+  .register-mode .lm-wrap {
+    margin-top: 0;
+  }
+
+  .register-mode .login-form {
+    gap: 16px;
+    margin-top: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-mode .lm-wrap[data-mood="valid"] .lm-stage {
+    animation: none;
+  }
+}

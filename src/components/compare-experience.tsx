@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeftRight, LoaderCircle, RotateCcw, GitCommit, Tag, CalendarDays } from "lucide-react";
+import { ArrowLeftRight, LoaderCircle, RotateCcw, GitCommit, Tag, CalendarDays, User } from "lucide-react";
 import type { GitHubRepo, GitHubUser, Contributor } from "@/types/github";
 import { compactNumber, formatDate, summarizeRepositories, languagePercentages } from "@/lib/analytics";
-import { Tabs, TextInput } from "@/components/ui";
+import { Tabs } from "@/components/ui";
+import { CompareCombobox, type Suggestion } from "@/components/global-search";
 import { RepoLanguageChart } from "@/components/repo-language-chart";
 import { LanguageChart } from "@/components/language-chart";
 
@@ -111,7 +112,40 @@ export function CompareExperience() {
     };
   }, [searchParams, runWith]);
 
+  function entityKey(value: string): string {
+    const clean = value.trim().toLowerCase();
+    if (!clean) return "";
+    return type === "developer" ? `dev:${clean}` : `repo:${clean}`;
+  }
+
+  function pickSide(side: "a" | "b", s: Suggestion) {
+    const identifier = s.kind === "developer" ? s.login : s.full_name;
+    if (side === "a") {
+      if (entityKey(identifier) === entityKey(b)) {
+        setError("Select two different entities to compare.");
+        return;
+      }
+      setError("");
+      setA(identifier);
+    } else {
+      if (entityKey(identifier) === entityKey(a)) {
+        setError("Select two different entities to compare.");
+        return;
+      }
+      setError("");
+      setB(identifier);
+    }
+  }
+
+  const duplicate =
+    a.trim() !== "" &&
+    a.trim().toLowerCase() === b.trim().toLowerCase();
+
   function run() {
+    if (duplicate) {
+      setError("Select two different entities to compare.");
+      return;
+    }
     void runWith(type, a, b, true);
   }
 
@@ -152,13 +186,14 @@ export function CompareExperience() {
       />
 
       <div className="mt-6 grid items-end gap-3 md:grid-cols-[1fr_auto_1fr]">
-        <TextInput
+        <CompareCombobox
+          kind={type}
           label={`First ${type}`}
           value={a}
-          onChange={setA}
-          autoComplete="off"
-          spellCheck={false}
-          placeholder={type === "developer" ? "torvalds" : "facebook/react"}
+          onTextChange={setA}
+          onPick={(s) => pickSide("a", s)}
+          placeholder={type === "developer" ? "Search developer (e.g. torvalds)" : "Search repository (e.g. facebook/react)"}
+          excludeKey={entityKey(b) || undefined}
         />
 
         <div className="flex items-center justify-center gap-2 pb-2">
@@ -180,20 +215,21 @@ export function CompareExperience() {
           </button>
         </div>
 
-        <TextInput
+        <CompareCombobox
+          kind={type}
           label={`Second ${type}`}
           value={b}
-          onChange={setB}
-          autoComplete="off"
-          spellCheck={false}
-          placeholder={type === "developer" ? "gaearon" : "vuejs/core"}
+          onTextChange={setB}
+          onPick={(s) => pickSide("b", s)}
+          placeholder={type === "developer" ? "Search developer (e.g. gaearon)" : "Search repository (e.g. vuejs/core)"}
+          excludeKey={entityKey(a) || undefined}
         />
       </div>
 
       <button
         type="button"
         onClick={run}
-        disabled={loading || !a.trim() || !b.trim()}
+        disabled={loading || !a.trim() || !b.trim() || duplicate}
         className="btn btn-primary mt-5 w-full sm:w-auto"
       >
         {loading && <LoaderCircle size={15} className="animate-spin" />}
@@ -206,7 +242,23 @@ export function CompareExperience() {
         </p>
       )}
 
-      {!data && !loading && !error && <div className="comparison-empty"><span className="text-metadata">Two perspectives. One view.</span><h2>Add two {type === "developer" ? "developers" : "repositories"} to begin.</h2><p>Align public metrics, technology, and activity. Use the differences to inform your own judgment.</p></div>}
+      {!data && !loading && !error && (
+        <div className="comparison-empty card-surface p-8 md:p-12 text-center">
+          <div className="mx-auto max-w-md">
+            <div className="flex items-center justify-center gap-6 mb-6">
+              <div className="relative flex-shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full border border-line bg-panel flex items-center justify-center overflow-hidden">
+                <User size={24} className="text-ink3" aria-hidden="true" />
+              </div>
+              <span className="text-xs font-mono text-ink3 tracking-wider uppercase">VS</span>
+              <div className="relative flex-shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full border border-line bg-panel flex items-center justify-center overflow-hidden">
+                <User size={24} className="text-ink3" aria-hidden="true" />
+              </div>
+            </div>
+            <h3 className="text-lg md:text-xl font-semibold text-ink mb-2">Choose two developers</h3>
+            <p className="text-sm md:text-base text-ink3">Compare their GitHub signals side by side.</p>
+          </div>
+        </div>
+      )}
       {loading && <div className="comparison-loading" role="status" aria-label="Loading comparison"><div className="skeleton h-48" /><div className="skeleton h-48" /></div>}
       {data && !loading && (
         <Results type={type} data={data} onRun={run} onSwap={swap} />
@@ -482,9 +534,10 @@ function CompareCard({
 }
 
 function CardHeader({ title, subtitle, avatar }: { title: string; subtitle: string; avatar?: string }) {
+  const [showAvatar, setShowAvatar] = useState(true);
   return (
     <div className="mb-6">
-      {avatar && (
+      {avatar && showAvatar && (
         <div className="mb-4">
           <Image
             src={avatar}
@@ -492,6 +545,7 @@ function CardHeader({ title, subtitle, avatar }: { title: string; subtitle: stri
             width={80}
             height={80}
             className="size-20 rounded-2xl ring-1 ring-line object-cover"
+            onError={() => setShowAvatar(false)}
           />
         </div>
       )}

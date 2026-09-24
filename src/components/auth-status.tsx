@@ -20,6 +20,12 @@ export async function AuthStatus() {
       user.email?.split("@")[0] ||
       "Account",
   );
+  const avatarUrl =
+    (typeof user.user_metadata?.avatar_url === "string" && user.user_metadata.avatar_url) ||
+    null;
+  const providerUrl =
+    (typeof user.user_metadata?.picture === "string" && user.user_metadata.picture) ||
+    null;
 
-  return <UserMenu name={name} />;
+  return <UserMenu name={name} avatarUrl={avatarUrl} providerUrl={providerUrl} />;
 }

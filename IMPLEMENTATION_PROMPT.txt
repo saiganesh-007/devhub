@@ -1,0 +1,21 @@
+DEVHUB DASHBOARD IMPLEMENTATION INSTRUCTION
+
+Use public/references/devhub-dashboard-reference.png as the FINAL visual source of truth.
+
+Rebuild ONLY the existing /dashboard and its application shell to match the reference as closely as possible.
+
+Important:
+- No left sidebar.
+- Match the top horizontal navbar.
+- Match the hero layout and proportions.
+- In the heading "Find the builders behind the code.", ONLY "builders" is blue.
+- Preserve all existing real DevHub functionality and data.
+- Preserve search, saved developers, saved repositories, recent history, compare, auth, routes, and theme.
+- Do not hardcode fake developer/repository data.
+- Do not redesign the landing page.
+- Do not invent a different layout.
+- Keep motion subtle.
+- Desktop must visually match the reference first, then make it responsive.
+- Run lint/build and fix errors.
+
+IMPLEMENT DIRECTLY. Do not stop at a plan.

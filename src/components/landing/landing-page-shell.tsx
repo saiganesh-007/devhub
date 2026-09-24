@@ -1,93 +1,78 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Particles from "@/components/particles";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LandingExperience } from "@/components/landing/landing-experience";
 import { LandingLoader } from "@/components/landing/landing-loader";
 
-const SEEN_KEY = "devhub:loader-seen-v1";
-
-function shouldSkipLoader(): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    // Hard reloads should still show the designed loader; SPA navigation
-    // back to "/" within the same tab should not replay it.
-    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    if (nav?.type === "reload") return false;
-    return window.sessionStorage.getItem(SEEN_KEY) === "1";
-  } catch {
-    return false;
+declare global {
+  interface Window {
+    __DEVHUB_LOADER_PLAYED__?: boolean;
   }
 }
 
+/**
+ * Landing lifecycle: VISIBLE → RUNNING → COMPLETE → EXITING → UNMOUNTED.
+ *
+ * The loader is part of the INITIAL render for `/` (state initializer, no
+ * waiting for effects), so every new browser document paints it immediately.
+ * Replay is gated by a per-document runtime flag — never persisted storage —
+ * so a fresh document (new tab, reload, hard refresh, same-tab address-bar
+ * entry) always plays the full show, while SPA navigation inside the same
+ * document never replays it.
+ */
 export function LandingPageShell() {
-  const [loading, setLoading] = useState(true);
-  const [overlayVisible, setOverlayVisible] = useState(true);
-  const [overlayLeaving, setOverlayLeaving] = useState(false);
+  const [showLoader, setShowLoader] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !window.__DEVHUB_LOADER_PLAYED__;
+  });
+  const [exiting, setExiting] = useState(false);
+  const unmountRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    // Defer past first paint so the server-rendered loader matches hydration,
-    // then skip replay for in-session SPA navigation back to "/".
-    const id = window.setTimeout(() => {
-      if (shouldSkipLoader()) {
-        setLoading(false);
-        setOverlayVisible(false);
-      }
-    }, 0);
-    return () => window.clearTimeout(id);
+    return () => {
+      if (unmountRef.current !== undefined) window.clearTimeout(unmountRef.current);
+    };
   }, []);
 
   // Lock scroll only while the loader covers the page. Landing scrolls
   // normally the moment the loader starts leaving.
   useEffect(() => {
     if (typeof document === "undefined") return;
-    document.body.classList.toggle("devhub-loader-locked", loading);
+    document.body.classList.toggle("devhub-loader-locked", showLoader && !exiting);
     return () => document.body.classList.remove("devhub-loader-locked");
-  }, [loading]);
+  }, [showLoader, exiting]);
 
   const handleComplete = useCallback(() => {
+    // Mark this document as played BEFORE exiting so no remount or
+    // navigation in the same document can replay the full loader.
     try {
-      window.sessionStorage.setItem(SEEN_KEY, "1");
+      window.__DEVHUB_LOADER_PLAYED__ = true;
     } catch {
-      // Session guard is best-effort; loader still exits cleanly.
+      // Flag is best-effort; loader still exits cleanly.
     }
     // Start the crossfade: landing is already painted underneath, so there
     // is no flash. Unmount the overlay after the CSS exit finishes.
-    setOverlayLeaving(true);
-    setLoading(false);
-    window.setTimeout(() => setOverlayVisible(false), 650);
+    setExiting(true);
+    if (unmountRef.current !== undefined) window.clearTimeout(unmountRef.current);
+    unmountRef.current = window.setTimeout(() => {
+      setShowLoader(false);
+    }, 380);
   }, []);
 
   return (
     <div className="devhub-loader-shell">
       <div
-        className={`landing-page ${loading ? "is-loading" : "is-ready"}`}
-        aria-hidden={loading}
+        className={`landing-page ${showLoader && !exiting ? "is-loading" : "is-ready"}`}
+        aria-hidden={showLoader && !exiting}
         // Prevent keyboard focus landing underneath the opaque loader.
-        inert={loading ? true : undefined}
+        inert={showLoader && !exiting ? true : undefined}
       >
-        <LandingExperience ready={!loading} navSuppressed={loading} />
+        <LandingExperience ready={!showLoader || exiting} navSuppressed={showLoader && !exiting} />
       </div>
 
-      {overlayVisible ? (
-        <div className={`landing-loader-overlay ${overlayLeaving ? "is-leaving" : ""}`} aria-hidden={!loading}>
-          <div className="landing-loader-particles" aria-hidden="true">
-            <Particles
-              particleColors={["#5ac8ff", "#8c7bff", "#ffffff"]}
-              particleCount={180}
-              particleSpread={10}
-              speed={0.15}
-              particleBaseSize={90}
-              moveParticlesOnHover
-              // Whisper of depth only: the lerped drift caps at a few
-              // pixels. Logo, mascot, and bar never move.
-              particleHoverFactor={0.03}
-              alphaParticles={false}
-              disableRotation={false}
-            />
-          </div>
-
-          {loading ? <LandingLoader onComplete={handleComplete} /> : null}
+      {showLoader ? (
+        <div className={`landing-loader-overlay ${exiting ? "is-leaving" : ""}`} aria-hidden={exiting}>
+          {!exiting ? <LandingLoader onComplete={handleComplete} /> : null}
         </div>
       ) : null}
     </div>

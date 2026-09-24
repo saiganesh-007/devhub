@@ -16,10 +16,10 @@ import {
   Users,
 } from "lucide-react";
 import Particles from "@/components/particles";
+import { CardBody, CardContainer, CardItem, useCursorGlow } from "@/components/ui/3d-card";
 import { LandingAmbient } from "./landing-ambient";
 import { LandingNav } from "./landing-nav";
 import { LandingFooter } from "./landing-footer";
-import { DevhubCatBadge } from "@/components/brand";
 import DepthText from "./depth-text";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -143,6 +143,9 @@ export function LandingExperience({
     };
   }, []);
 
+  // Cursor light for lower-page preview cards (delegated, no tilt, no re-renders).
+  useCursorGlow(rootRef, ".j-frame, .workflow-step");
+
   useGSAP(
     () => {
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -229,10 +232,12 @@ export function LandingExperience({
         { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.09 },
         0
       );
+      // Footer grid arrives as one calm group (not column-by-column) so the
+      // brand never sits isolated in the transition while scrubbing.
       closeTl.fromTo(
-        ".landing-footer-grid > *",
-        { autoAlpha: 0, y: 34 },
-        { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12 },
+        ".landing-footer-grid",
+        { autoAlpha: 0, y: 24 },
+        { autoAlpha: 1, y: 0, duration: 0.6 },
         0.35
       );
       closeTl.fromTo(
@@ -248,29 +253,8 @@ export function LandingExperience({
         0.45
       );
 
-      // Single lightweight pointer loop: console tilt + layered depth drift.
-      if (window.matchMedia("(pointer: fine)").matches) {
-        const console = rootRef.current?.querySelector<HTMLElement>(".hero-console");
-        const layers = gsap.utils.toArray<HTMLElement>(".hw-layer");
-        const tiltX = console
-          ? gsap.quickTo(console, "rotationX", { duration: 0.9, ease: "power2.out" })
-          : null;
-        const tiltY = console
-          ? gsap.quickTo(console, "rotationY", { duration: 0.9, ease: "power2.out" })
-          : null;
-        const onMove = (event: PointerEvent) => {
-          const x = event.clientX / window.innerWidth - 0.5;
-          const y = event.clientY / window.innerHeight - 0.5;
-          tiltX?.(-y * 5);
-          tiltY?.(x * 7);
-          layers.forEach((layer) => {
-            const depth = Number(layer.dataset.depth ?? 1);
-            gsap.to(layer, { x: x * 10 * depth, y: y * 8 * depth, duration: 1, overwrite: "auto" });
-          });
-        };
-        window.addEventListener("pointermove", onMove, { passive: true });
-        return () => window.removeEventListener("pointermove", onMove);
-      }
+      // Pointer tilt + cursor light for the hero preview are owned by the
+      // CardContainer 3D system (rAF, pointer-fine only). Nothing to do here.
     },
     { scope: rootRef }
   );
@@ -284,11 +268,11 @@ export function LandingExperience({
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-particles" aria-hidden="true">
           <Particles
-            particleColors={["#5ac8ff", "#8c7bff", "#ffffff"]}
-            particleCount={90}
+            particleColors={["#861f3d", "#b14a67", "#c97b90"]}
+            particleCount={36}
             particleSpread={11}
-            speed={0.08}
-            particleBaseSize={70}
+            speed={0.06}
+            particleBaseSize={60}
             moveParticlesOnHover={false}
             alphaParticles
             disableRotation={false}
@@ -300,18 +284,18 @@ export function LandingExperience({
             <p className="hero-eyebrow hero-enter">Open-source intelligence</p>
             <DepthText
               text="DEVHUB"
-              layers={30}
-              depth={2.1}
-              faceColor="#f8fafc"
-              depthColor="#5b6cff"
-              tilt={6}
+              layers={14}
+              depth={1.2}
+              faceColor="#171416"
+              depthColor="#861f3d"
+              tilt={4}
               smoothing={0.14}
               perspective={900}
               autoOrbit
-              orbitSpeed={0.28}
-              fontSize="clamp(2.9rem, 5.6vw, 4.8rem)"
+              orbitSpeed={0.18}
+              fontSize="clamp(2.5rem, 4.8vw, 4.2rem)"
               fontWeight={700}
-              shadow
+              shadow={false}
               className="hero-depth hero-enter"
               style={{ fontFamily: "var(--font-devhub-wordmark)" }}
             />
@@ -335,7 +319,14 @@ export function LandingExperience({
           </div>
 
           {/* RIGHT SIDE: one layered intelligence workspace */}
-          <div className="hero-console hero-enter" aria-label="DevHub intelligence workspace preview">
+          <CardContainer
+            className="hero-tilt hero-enter"
+            perspective={1100}
+            maxTiltX={3}
+            maxTiltY={4}
+            proximity={64}
+          >
+          <CardBody className="hero-console" aria-label="DevHub intelligence workspace preview">
             <div className="console-chrome">
               <span className="chrome-dots" aria-hidden="true">
                 <i />
@@ -354,9 +345,12 @@ export function LandingExperience({
                 <path className="trace" pathLength={1} d="M480 470 C420 430 380 370 350 325" />
               </svg>
 
-              <section className="hw-main hw-layer" data-depth="0.4" aria-label="Developer node">
+              <section className="hw-main hw-layer" aria-label="Developer node">
+                <CardItem translateZ={16} parallax={2}>
                 <div className="hw-identity">
-                  <DevhubCatBadge size={54} priority />
+                  <span className="hw-identity-avatar" aria-hidden="true">
+                    S
+                  </span>
                   <div>
                     <p className="micro-label">Developer node</p>
                     <h3>Sai</h3>
@@ -367,6 +361,7 @@ export function LandingExperience({
                     <Bookmark size={15} />
                   </Link>
                 </div>
+                </CardItem>
                 <ul className="hw-meters">
                   <li>
                     <Star size={13} />
@@ -389,8 +384,9 @@ export function LandingExperience({
                 </p>
               </section>
 
-              <section className="hw-repos hw-layer" data-depth="1" aria-label="Repository intelligence">
+              <section className="hw-repos hw-layer" aria-label="Repository intelligence">
                 <p className="micro-label">Repository intelligence</p>
+                <CardItem translateZ={20} parallax={2}>
                 <ul className="repo-rows">
                   {REPOS.map((repo) => (
                     <li key={repo.name}>
@@ -402,13 +398,15 @@ export function LandingExperience({
                     </li>
                   ))}
                 </ul>
+                </CardItem>
                 <Link href="/search" className="hw-more">
                   Browse repositories <ArrowRight size={12} />
                 </Link>
               </section>
 
-              <section className="hw-langs hw-layer" data-depth="0.7" aria-label="Language signals">
+              <section className="hw-langs hw-layer" aria-label="Language signals">
                 <p className="micro-label">Language signals</p>
+                <CardItem translateZ={18} parallax={2}>
                 <ul className="lang-bars">
                   {LANGUAGES.map((lang) => (
                     <li key={lang.name}>
@@ -420,18 +418,21 @@ export function LandingExperience({
                     </li>
                   ))}
                 </ul>
+                </CardItem>
               </section>
 
-              <section className="hw-activity hw-layer" data-depth="1.3" aria-label="Activity">
+              <section className="hw-activity hw-layer" aria-label="Activity">
                 <div className="hw-activity-head">
                   <p className="micro-label">Activity</p>
                   <Activity size={13} />
                 </div>
+                <CardItem translateZ={20} parallax={2.5}>
                 <div className="contrib-grid" aria-hidden="true">
                   {CELLS.map((level, i) => (
                     <i key={i} data-level={level} />
                   ))}
                 </div>
+                </CardItem>
                 <svg className="spark hw-spark" viewBox="0 0 260 64" aria-hidden="true">
                   <path
                     className="hw-spark-line"
@@ -442,8 +443,9 @@ export function LandingExperience({
                 <p className="muted small">Contribution rhythm across tracked work</p>
               </section>
 
-              <section className="hw-people hw-layer" data-depth="1.6" aria-label="Relationships">
+              <section className="hw-people hw-layer" aria-label="Relationships">
                 <p className="micro-label">Relationships</p>
+                <CardItem translateZ={18} parallax={2}>
                 <ul>
                   {PEOPLE.map((person, i) => (
                     <li key={person.initials} style={{ animationDelay: `${i * 0.7}s` }}>
@@ -455,9 +457,11 @@ export function LandingExperience({
                     </li>
                   ))}
                 </ul>
+                </CardItem>
               </section>
             </div>
-          </div>
+          </CardBody>
+          </CardContainer>
         </div>
 
       </section>
@@ -525,7 +529,9 @@ export function LandingExperience({
                 <div className="j-scene" data-scene="2">
                   <div className="j-dev">
                     <div className="j-dev-head">
-                      <DevhubCatBadge size={44} />
+                      <span className="j-dev-avatar" aria-hidden="true">
+                        S
+                      </span>
                       <div>
                         <p className="micro-label">Developer intelligence</p>
                         <h3>Sai</h3>

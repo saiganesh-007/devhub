@@ -1,0 +1,930 @@
+/* Login — continuation of the landing world. Same tokens, background,
+   grid, lighting, borders, typography, and accent language as landing.css.
+   Scoped under #login-root. Login only. */
+
+#login-root {
+  --login-bg: #fcfafa;
+  --login-surface: rgba(255, 255, 255, 0.92);
+  --login-surface-strong: #ffffff;
+  --login-line: rgba(74, 16, 32, 0.1);
+  --login-line-strong: rgba(134, 31, 61, 0.22);
+  --login-ink: #171416;
+  --login-ink-2: #62585c;
+  --login-ink-3: #8d8185;
+  --login-cyan: #861f3d;
+  --login-cyan-strong: #941f45;
+  --login-violet: #b14a67;
+  --login-err: #6d1a31;
+  --login-ok: #6d1a31;
+  --lh-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: clip;
+  color: var(--login-ink);
+  background:
+    radial-gradient(circle at 15% 8%, rgba(134, 31, 61, 0.08), transparent 32%),
+    radial-gradient(circle at 85% 14%, rgba(177, 74, 103, 0.05), transparent 30%),
+    linear-gradient(180deg, #fcfafa 0%, #f8f4f5 60%, #fcfafa 100%);
+}
+
+#login-root ::selection {
+  background: #861f3d;
+  color: #ffffff;
+}
+
+.login-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.login-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(74, 16, 32, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 16, 32, 0.045) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: radial-gradient(circle at 50% 22%, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.7) 40%, transparent 78%);
+}
+
+.login-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  background-image: radial-gradient(rgba(74, 16, 32, 0.06) 0.9px, transparent 0.9px);
+  background-size: 10px 10px;
+  mask-image: radial-gradient(circle at center, black 0%, transparent 85%);
+}
+
+.login-light-cyan,
+.login-light-violet {
+  position: absolute;
+  filter: blur(72px);
+  opacity: 0.5;
+}
+
+.login-light-cyan {
+  right: -12%;
+  top: -12%;
+  width: 54vw;
+  height: 54vw;
+  background: radial-gradient(circle, rgba(134, 31, 61, 0.08), transparent 62%);
+}
+
+.login-light-violet {
+  left: -12%;
+  top: 30%;
+  width: 46vw;
+  height: 46vw;
+  background: radial-gradient(circle, rgba(177, 74, 103, 0.05), transparent 64%);
+}
+
+.login-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px;
+}
+
+.login-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #171416;
+}
+
+.login-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(74, 16, 32, 0.16);
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(74, 16, 32, 0.08);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #861f3d;
+}
+
+.login-brand-word {
+  font-family: var(--font-devhub-wordmark), var(--font-geist-sans), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.login-home {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--login-ink-2);
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.login-home:hover {
+  color: #861f3d;
+}
+
+.login-grid {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: clamp(20px, 3vw, 44px);
+  padding: 12px 28px 40px;
+}
+
+/* LEFT — open stage, no card. Mascot sits directly in the page
+   atmosphere with only a whisper of light behind it. */
+.login-visual {
+  min-width: 0;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 28px;
+  position: relative;
+  overflow: visible;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.login-visual::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(480px, 90%);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(134, 31, 61, 0.07), transparent 62%),
+    radial-gradient(circle at 65% 60%, rgba(177, 74, 103, 0.05), transparent 60%);
+}
+
+/* RIGHT — form lives directly in the atmosphere, no card */
+.login-panel {
+  min-width: 0;
+  padding: 12px 8px;
+}
+
+.login-title {
+  margin: 0;
+  font-size: clamp(1.7rem, 2.6vw, 2.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  font-weight: 680;
+  color: #171416;
+}
+
+.login-form {
+  margin-top: 26px;
+  display: grid;
+  gap: 16px;
+  max-width: 400px;
+}
+
+.login-field {
+  display: block;
+}
+
+.login-label {
+  display: block;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #861f3d;
+  margin-bottom: 8px;
+}
+
+.login-input {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid rgba(74, 16, 32, 0.14);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #171416;
+  font-size: 16px;
+  padding: 0 16px;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.login-input::placeholder {
+  color: #8d8185;
+  font-size: 14px;
+}
+
+.login-input:hover {
+  border-color: rgba(74, 16, 32, 0.22);
+}
+
+.login-input:focus {
+  border-color: #861f3d;
+  box-shadow: 0 0 0 3px rgba(134, 31, 61, 0.07);
+  background: #ffffff;
+}
+
+.login-password {
+  position: relative;
+  display: block;
+}
+
+.login-input-password {
+  padding-right: 48px;
+}
+
+.login-visibility {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--login-ink-2);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.login-visibility:hover {
+  color: #861f3d;
+  background: rgba(134, 31, 61, 0.06);
+}
+
+.login-error {
+  margin: 0;
+  border: 1px solid rgba(109, 26, 49, 0.25);
+  background: rgba(134, 31, 61, 0.06);
+  color: #6d1a31;
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 10px 14px;
+  border-radius: 14px;
+}
+
+.login-primary {
+  min-height: 52px;
+  border: 1px solid rgba(74, 16, 32, 0.3);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #941f45, #6d1a31);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 12px 30px rgba(74, 16, 32, 0.25);
+  transition: transform 0.2s ease, filter 0.2s ease, background 0.2s ease;
+}
+
+.login-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, #a2254f, #7a1e37);
+}
+
+.login-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+}
+
+.login-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+}
+
+.login-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.login-spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  animation: login-spin 0.9s linear infinite;
+  display: inline-block;
+}
+
+@keyframes login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.login-link-muted {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--login-ink-2);
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.login-link-muted:hover {
+  color: #861f3d;
+}
+
+.login-link-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  color: var(--login-cyan-strong);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 0;
+}
+
+.login-link-brand:hover {
+  text-decoration: underline;
+}
+
+.login-switch {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--login-ink-2);
+}
+
+.login-link-strong {
+  color: #6d1a31;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.login-link-strong:hover {
+  color: #941f45;
+}
+
+/* ---------- mascot ---------- */
+.lm-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: auto;
+  max-width: 520px;
+  overflow: visible;
+  will-change: transform;
+}
+
+/* Tappable virtual-pet affordance. */
+.lm-stage {
+  cursor: pointer;
+}
+
+.lm-wrap:focus-visible {
+  outline: 2px solid rgba(134, 31, 61, 0.5);
+  outline-offset: 8px;
+  border-radius: 12px;
+}
+
+.lm-squash {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 92%;
+  will-change: transform;
+}
+
+.lm-stage {
+  position: relative;
+  width: min(410px, 78vw);
+  aspect-ratio: 440 / 370;
+  overflow: visible;
+  clip-path: none;
+  mask: none;
+}
+
+.lm-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  clip-path: none;
+}
+
+/* Direction: flip the silhouette; counter-flip the laptop so its
+   </> glyphs never mirror. The scaleX pass through zero reads as a turn. */
+.lm-flip {
+  width: 100%;
+  height: 100%;
+  transform: scaleX(1);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lm-wrap[data-facing="left"] .lm-flip {
+  transform: scaleX(-1);
+}
+
+.lm-laptop {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.lm-wrap[data-facing="left"] .lm-laptop {
+  transform: scaleX(-1);
+}
+
+.lm-tail {
+  clip-path: none;
+}
+
+.lm-head,
+.lm-body,
+.lm-tail,
+.lm-eye,
+.lm-ear,
+.lm-mood-tilt,
+.lm-pupil {
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.lm-mood-tilt {
+  transition: transform 220ms var(--lh-ease);
+}
+
+/* Mood head-tilt layer (composes with the JS gaze transform above it). */
+.lm-wrap[data-mood="curious"] .lm-mood-tilt {
+  transform: rotate(7deg) translateY(-2px);
+}
+
+.lm-wrap[data-mood="happy"] .lm-mood-tilt {
+  transform: rotate(-3deg);
+}
+
+.lm-wrap[data-mood="surprised"] .lm-mood-tilt {
+  transform: translateY(-3px);
+}
+
+.lm-wrap[data-mood="error"] .lm-mood-tilt {
+  transform: rotate(-4deg);
+}
+
+.lm-wrap[data-mood="annoyed"] .lm-mood-tilt {
+  animation: lm-shake 0.5s ease;
+}
+
+.lm-wrap[data-mood="recovering"] .lm-mood-tilt {
+  animation: lm-shake 0.6s ease;
+}
+
+.lm-wrap[data-mood="dizzy"] .lm-mood-tilt {
+  animation: lm-wobble 1.4s ease-in-out;
+}
+
+@keyframes lm-shake {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-7deg); }
+  40% { transform: rotate(6deg); }
+  60% { transform: rotate(-4deg); }
+  80% { transform: rotate(2deg); }
+}
+
+@keyframes lm-wobble {
+  0%, 100% { transform: rotate(0deg) translateX(0); }
+  20% { transform: rotate(-10deg) translateX(-4px); }
+  45% { transform: rotate(8deg) translateX(4px); }
+  70% { transform: rotate(-5deg) translateX(-2px); }
+  85% { transform: rotate(2deg) translateX(1px); }
+}
+
+/* Pupil emphasis layer (composes with the JS gaze translate above it). */
+.lm-pupil {
+  transition: transform 170ms var(--lh-ease);
+}
+
+.lm-wrap[data-mood="curious"] .lm-pupil {
+  transform: scale(1.14);
+}
+
+.lm-wrap[data-mood="surprised"] .lm-pupil {
+  transform: scale(1.3);
+}
+
+.lm-wrap[data-mood="happy"] .lm-pupil {
+  transform: scale(0.96, 0.82);
+}
+
+.lm-wrap[data-mood="annoyed"] .lm-pupil {
+  transform: scale(0.9);
+}
+
+/* Dizzy stars — orbit above the head only while dizzy. */
+.lm-stars {
+  opacity: 0;
+  transition: opacity 220ms ease;
+  transform-box: view-box;
+  transform-origin: 160px 30px;
+}
+
+.lm-wrap[data-mood="dizzy"] .lm-stars {
+  opacity: 1;
+  animation: lm-orbit 1.5s linear infinite;
+}
+
+@keyframes lm-orbit {
+  to { transform: rotate(360deg); }
+}
+
+.lm-ear {
+  transition: transform 260ms var(--lh-ease);
+}
+
+.lm-wrap[data-mood="email"] .lm-ear-l {
+  transform: rotate(-7deg) translateY(-2px);
+}
+
+.lm-wrap[data-mood="email"] .lm-ear-r {
+  transform: rotate(7deg) translateY(-2px);
+}
+
+.lm-wrap[data-mood="recognized"] .lm-ear-l {
+  transform: rotate(-5deg) translateY(-1px);
+}
+
+.lm-wrap[data-mood="recognized"] .lm-ear-r {
+  transform: rotate(5deg) translateY(-1px);
+}
+
+/* Social + mischief ear language. */
+.lm-wrap[data-mood="curious"] .lm-ear-l {
+  transform: rotate(-10deg) translateY(-3px);
+}
+
+.lm-wrap[data-mood="curious"] .lm-ear-r {
+  transform: rotate(10deg) translateY(-3px);
+}
+
+.lm-wrap[data-mood="surprised"] .lm-ear-l,
+.lm-wrap[data-mood="surprised"] .lm-ear-r {
+  transform: translateY(-4px);
+}
+
+.lm-wrap[data-mood="annoyed"] .lm-ear-l {
+  transform: rotate(13deg) translateY(2px);
+}
+
+.lm-wrap[data-mood="annoyed"] .lm-ear-r {
+  transform: rotate(-13deg) translateY(2px);
+}
+
+.lm-wrap[data-mood="dizzy"] .lm-ear-l {
+  transform: rotate(9deg) translateY(4px);
+}
+
+.lm-wrap[data-mood="dizzy"] .lm-ear-r {
+  transform: rotate(-9deg) translateY(4px);
+}
+
+.lm-tail {
+  transition: transform 120ms linear;
+}
+
+.lm-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 56%;
+  height: 14px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(74, 16, 32, 0.18), transparent 70%);
+  pointer-events: none;
+}
+
+.lm-eye {
+  transition: transform 90ms ease-out;
+}
+
+.lm-wrap[data-blink="true"] .lm-eye {
+  transform: scaleY(0.12) !important;
+}
+
+.lm-wrap[data-blink="soft"] .lm-eye {
+  transform: scaleY(0.55) !important;
+}
+
+.lm-brows,
+.lm-mouth {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.lm-mouth-idle {
+  opacity: 1;
+}
+
+.lm-wrap[data-mood="email"] .lm-mouth-idle,
+.lm-wrap[data-mood="recognized"] .lm-mouth-idle,
+.lm-wrap[data-mood="button"] .lm-mouth-idle,
+.lm-wrap[data-mood="peek"] .lm-mouth-idle,
+.lm-wrap[data-mood="curious"] .lm-mouth-idle,
+.lm-wrap[data-mood="happy"] .lm-mouth-idle,
+.lm-wrap[data-mood="surprised"] .lm-mouth-idle,
+.lm-wrap[data-mood="annoyed"] .lm-mouth-idle,
+.lm-wrap[data-mood="dizzy"] .lm-mouth-idle {
+  opacity: 0;
+}
+
+.lm-wrap[data-mood="email"] .lm-mouth-attentive,
+.lm-wrap[data-mood="button"] .lm-mouth-attentive,
+.lm-wrap[data-mood="peek"] .lm-mouth-attentive,
+.lm-wrap[data-mood="success"] .lm-mouth-attentive,
+.lm-wrap[data-mood="curious"] .lm-mouth-attentive,
+.lm-wrap[data-mood="recognized"] .lm-mouth-happy,
+.lm-wrap[data-mood="happy"] .lm-mouth-happy {
+  opacity: 1;
+}
+
+.lm-wrap[data-mood="surprised"] .lm-mouth-surprised,
+.lm-wrap[data-mood="dizzy"] .lm-mouth-surprised {
+  opacity: 1;
+}
+
+.lm-wrap[data-mood="annoyed"] .lm-mouth-calm,
+.lm-wrap[data-mood="annoyed"] .lm-brows {
+  opacity: 1;
+}
+
+.lm-wrap[data-mood="error"] .lm-mouth-idle {
+  opacity: 0;
+}
+
+.lm-wrap[data-mood="error"] .lm-mouth-concerned,
+.lm-wrap[data-mood="error"] .lm-brows {
+  opacity: 1;
+}
+
+/* Error: ears lower slightly + small head tilt. */
+.lm-wrap[data-mood="error"] .lm-ear-l {
+  transform: rotate(6deg) translateY(3px);
+}
+
+.lm-wrap[data-mood="error"] .lm-ear-r {
+  transform: rotate(-6deg) translateY(3px);
+}
+
+.lm-wrap[data-mood="loading"] .lm-mouth-idle {
+  opacity: 0;
+}
+
+.lm-wrap[data-mood="loading"] .lm-mouth-calm {
+  opacity: 1;
+}
+
+.lm-paws {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.lm-paw {
+  transition: transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1.2);
+}
+
+.lm-paw-l {
+  transform: translate(-26px, 56px);
+}
+
+.lm-paw-r {
+  transform: translate(26px, 56px);
+}
+
+.lm-wrap[data-mood="password"] .lm-paws,
+.lm-wrap[data-mood="peek"] .lm-paws {
+  opacity: 1;
+}
+
+.lm-wrap[data-mood="password"] .lm-paw-l,
+.lm-wrap[data-mood="peek"] .lm-paw-l {
+  transform: translate(0, 0);
+}
+
+.lm-wrap[data-mood="password"] .lm-paw-r,
+.lm-wrap[data-mood="peek"] .lm-paw-r {
+  transform: translate(0, 0);
+}
+
+.lm-wrap[data-mood="peek"] .lm-paw-l {
+  transform: translate(-9px, -3px) rotate(-8deg);
+}
+
+.lm-wrap[data-mood="peek"] .lm-paw-r {
+  transform: translate(9px, -3px) rotate(8deg);
+}
+
+.lm-wrap[data-mood="loading"] .lm-stage {
+  animation: lm-breathe 3.2s ease-in-out infinite;
+}
+
+.lm-wrap[data-mood="recognized"] .lm-stage {
+  animation: lm-nod 0.7s ease;
+}
+
+@keyframes lm-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.014);
+  }
+}
+
+@keyframes lm-nod {
+  0% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Speech bubble — tiny, floats by the mascot, only when it has
+   something to say. Hidden at rest so the cat sits in open space. */
+.lm-bubble {
+  position: absolute;
+  left: 63%;
+  bottom: 83%;
+  transform: translateX(-50%) scale(1);
+  transform-origin: 30% 100%;
+  max-width: 200px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(74, 16, 32, 0.14);
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(74, 16, 32, 0.1);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 220ms ease, transform 220ms var(--lh-ease), visibility 220ms;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.lm-bubble::after {
+  content: "";
+  position: absolute;
+  left: 30%;
+  bottom: -4px;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: #ffffff;
+  border-right: 1px solid rgba(74, 16, 32, 0.14);
+  border-bottom: 1px solid rgba(74, 16, 32, 0.14);
+}
+
+.lm-wrap[data-mood="idle"] .lm-bubble,
+.lm-wrap[data-mood="curious"] .lm-bubble,
+.lm-wrap[data-mood="happy"] .lm-bubble,
+.lm-wrap[data-mood="button"] .lm-bubble {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) scale(0.9);
+}
+
+.lm-line {
+  margin: 0;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #62585c;
+}
+
+.lm-wrap[data-mood="error"] .lm-line,
+.lm-wrap[data-mood="annoyed"] .lm-line {
+  color: #6d1a31;
+}
+
+.lm-wrap[data-mood="success"] .lm-line,
+.lm-wrap[data-mood="recognized"] .lm-line,
+.lm-wrap[data-mood="curious"] .lm-line,
+.lm-wrap[data-mood="happy"] .lm-line {
+  color: var(--login-cyan-strong);
+}
+
+@media (max-width: 900px) {
+  .login-grid {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+    gap: 8px;
+    padding: 4px 16px 28px;
+    align-items: start;
+  }
+
+  .login-visual {
+    min-height: 0;
+    padding: 32px 20px 10px;
+  }
+
+  .lm-stage {
+    width: min(220px, 60vw);
+  }
+
+  .lm-bubble {
+    max-width: 160px;
+    padding: 6px 11px;
+  }
+
+  .lm-bubble .lm-line {
+    font-size: 11px;
+  }
+
+  .login-panel {
+    padding: 14px 4px 0;
+  }
+
+  .login-form {
+    max-width: none;
+  }
+
+  .login-top {
+    padding: 18px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #login-root *,
+  #login-root *::before,
+  #login-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .lm-head,
+  .lm-body,
+  .lm-tail,
+  .lm-eye,
+  .lm-ear,
+  .lm-flip,
+  .lm-squash,
+  .lm-mood-tilt,
+  .lm-pupil {
+    transform: none !important;
+  }
+
+  .lm-wrap[data-mood="dizzy"] .lm-stars {
+    animation: none;
+    opacity: 0;
+  }
+
+  .lm-wrap[data-facing="left"] .lm-laptop {
+    transform: none !important;
+  }
+
+  .lm-wrap[data-mood="loading"] .lm-stage,
+  .lm-wrap[data-mood="recognized"] .lm-stage {
+    animation: none;
+  }
+}

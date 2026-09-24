@@ -2,20 +2,15 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { THEME_STORAGE_KEY, themeStorage } from "@/lib/theme";
+import { THEME_STORAGE_KEY } from "@/lib/theme";
 import type { ResolvedTheme, ThemePreference } from "@/lib/theme";
 
-function media(): MediaQueryList | null {
-  return typeof window === "undefined"
-    ? null
-    : window.matchMedia("(prefers-color-scheme: light)");
-}
-
-function resolve(preference: ThemePreference | null): ResolvedTheme {
-  if (preference === "light" || preference === "dark") return preference;
-  return media()?.matches ? "light" : "dark";
-}
-
+/**
+ * Submission lock: light theme is forced throughout DevHub.
+ * The dark-theme architecture (tokens, stored preferences, system
+ * detection) is preserved for later — the provider simply ignores it
+ * for now and always resolves to "light".
+ */
 interface ThemeContextValue {
   preference: ThemePreference;
   resolved: ResolvedTheme;
@@ -25,8 +20,8 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [preference, setPreferenceState] = useState<ThemePreference>("system");
-  const [resolved, setResolved] = useState<ResolvedTheme>("dark");
+  const [preference] = useState<ThemePreference>("light");
+  const [resolved] = useState<ResolvedTheme>("light");
 
   const apply = useCallback((theme: ResolvedTheme) => {
     document.documentElement.dataset.theme = theme;
@@ -34,38 +29,24 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const stored = themeStorage.get();
-    const initial =
-      stored === "light" || stored === "dark"
-        ? stored
-        : document.documentElement.dataset.theme === "light"
-          ? "light"
-          : "dark";
-    // align React state with the pre-hydration ThemeScript after mount,
-    // keeping the first client render identical to the server render
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPreferenceState(stored ?? "system");
-    setResolved(initial);
-    apply(initial);
+    // Force light on mount and clear any previously stored dark preference.
+    try {
+      window.localStorage.removeItem(THEME_STORAGE_KEY);
+    } catch {
+      // Best effort.
+    }
+    apply("light");
   }, [apply]);
 
-  useEffect(() => {
-    const onChange = () => {
-      const next = resolve(preference);
-      setResolved(next);
-      apply(next);
-    };
-    media()?.addEventListener("change", onChange);
-    return () => media()?.removeEventListener("change", onChange);
-  }, [preference, apply]);
-
   const setPreference = useCallback(
-    (next: ThemePreference) => {
-      themeStorage.set(next);
-      setPreferenceState(next);
-      const nextResolved = next === "system" ? resolve(null) : next;
-      setResolved(nextResolved);
-      apply(nextResolved);
+    () => {
+      // Locked for submission: keep light regardless of requests.
+      try {
+        window.localStorage.removeItem(THEME_STORAGE_KEY);
+      } catch {
+        // Best effort.
+      }
+      apply("light");
     },
     [apply],
   );

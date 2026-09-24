@@ -31,7 +31,7 @@ export function AuthShell({
       />
 
       <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10">
-        <Logo />
+        <Logo size={60} />
         <Link
           href="/"
           className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink3 transition-colors hover:text-ink"

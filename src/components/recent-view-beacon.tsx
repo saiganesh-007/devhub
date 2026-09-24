@@ -9,6 +9,16 @@ export function RecentViewBeacon({ type, identifier, metadata }: {
 }) {
   const metadataKey = JSON.stringify(metadata);
   useEffect(() => {
+    // Respect the Privacy → Save recent views preference (default on).
+    try {
+      const raw = window.localStorage.getItem("devhub:privacy");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { saveRecentViews?: boolean };
+        if (parsed.saveRecentViews === false) return;
+      }
+    } catch {
+      // Fall through and record.
+    }
     const controller = new AbortController();
     void fetch("/api/recent-views", {
       method: "POST",
@@ -20,4 +30,3 @@ export function RecentViewBeacon({ type, identifier, metadata }: {
   }, [identifier, metadataKey, type]);
   return null;
 }
-

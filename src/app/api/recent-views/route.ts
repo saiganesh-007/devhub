@@ -24,3 +24,13 @@ export async function POST(request: Request) {
     return Response.json({ ok: false }, { status: 400 });
   }
 }
+
+export async function DELETE() {
+  const database = await createSupabaseServer();
+  if (!database) return Response.json({ ok: false }, { status: 503 });
+  const { data: { user } } = await database.auth.getUser();
+  if (!user) return Response.json({ ok: false }, { status: 401 });
+  const { error } = await database.from("recent_views").delete().eq("user_id", user.id);
+  if (error) return Response.json({ ok: false }, { status: 500 });
+  return Response.json({ ok: true });
+}

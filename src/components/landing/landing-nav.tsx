@@ -136,7 +136,7 @@ export function LandingNav() {
           aria-label="DevHub home"
           tabIndex={collapsed && !expanded ? -1 : 0}
         >
-          <DevhubCatBadge size={30} priority />
+          <DevhubCatBadge size={32} priority />
           <span className="landing-pill-word">DEVHUB</span>
         </Link>
 
