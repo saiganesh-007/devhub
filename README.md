@@ -13,7 +13,7 @@ Keep the GitHub research you care about in one clean workspace.
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-861F3D?style=for-the-badge&logo=vercel&logoColor=white)](https://devhub-flame-seven.vercel.app)
 [![GitHub](https://img.shields.io/badge/GitHub-171416?style=for-the-badge&logo=github&logoColor=white)](https://github.com/saiganesh-007/devhub)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](YOUR_LINKEDIN_URL)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/saiganesh00007/)
 
 <br />
 
@@ -46,38 +46,38 @@ You can search a developer, inspect their public work, explore repositories, com
 
 ### **[devhub-flame-seven.vercel.app](https://devhub-flame-seven.vercel.app)**
 
-The production app is currently running with:
+The production app is running with:
 
 - GitHub REST API
-- Supabase Auth
+- Supabase Authentication
 - PostgreSQL
 - Supabase Storage
 - Vercel
 
 ---
 
-## ✨ What you can do
+## ✨ What can you do?
 
 ### 👨‍💻 Explore Developers
 
-Search a GitHub username and get a much cleaner view of their public activity.
+Search a GitHub username and get a cleaner view of their public activity.
 
 - Followers & following
 - Public repositories
 - Total repository stars
 - Total forks
 - Language distribution
-- Recent GitHub activity
+- Recent public GitHub activity
 - Recently updated repositories
 - Top repositories
 - Developer profile details
-- Save profiles for later
+- Save developers for later
 
 ---
 
 ### 📦 Explore Repositories
 
-Dig into public GitHub repositories without jumping through multiple GitHub tabs.
+Dig into public repositories without constantly switching between GitHub tabs.
 
 - Stars
 - Forks
@@ -99,6 +99,7 @@ Compare:
 
 ```text
 Developer ↔ Developer
+
 Repository ↔ Repository
 ```
 
@@ -110,12 +111,9 @@ The comparison view uses actual GitHub signals instead of made-up ratings or hid
 
 Signed-in users can build their own research workspace.
 
-You can save:
+You can save developers and repositories and come back to them later.
 
-- Developers
-- Repositories
-
-Saved items stay connected to your Supabase account, so they remain there after refreshing or signing back in.
+Saved data is connected to your Supabase account, so it stays available after refreshing or signing back in.
 
 ---
 
@@ -125,35 +123,36 @@ The global search supports both developers and repositories.
 
 It includes:
 
-- Autocomplete
+- Developer autocomplete
+- Repository autocomplete
 - Keyboard navigation
 - Search history
 - Debounced API requests
-- Request cancellation
+- Stale-request cancellation
 - Loading states
 - Empty states
 - Friendly errors
 - GitHub rate-limit handling
 
-The search layer also reduces unnecessary GitHub API calls while the user is typing.
+The search layer also reduces unnecessary GitHub requests while somebody is still typing.
 
 ---
 
-### 🖼️ Profile photo editor
+### 🖼️ Profile Photo Editor
 
-I didn't want the profile picture setting to feel like a basic file uploader.
+I didn't want the account photo setting to feel like a basic file upload.
 
 Users can:
 
 - Upload JPG, PNG or WebP
 - Drag the image into position
-- Zoom in/out
+- Zoom in and out
 - Preview the circular crop
-- Save a 512 × 512 result
-- Automatically convert it to WebP
-- Store it in Supabase Storage
+- Save a 512 × 512 image
+- Automatically convert the result to WebP
+- Store it using Supabase Storage
 
-The cropped image is then used consistently across the DevHub workspace.
+The final cropped avatar is then used consistently throughout the DevHub workspace.
 
 ---
 
@@ -162,7 +161,7 @@ The cropped image is then used consistently across the DevHub workspace.
 | Area | Built With |
 | --- | --- |
 | Framework | Next.js 16 |
-| UI | React 19 |
+| Frontend | React 19 |
 | Language | TypeScript |
 | Styling | Tailwind CSS 4 |
 | Authentication | Supabase Auth |
@@ -171,7 +170,7 @@ The cropped image is then used consistently across the DevHub workspace.
 | External Data | GitHub REST API |
 | Validation | Zod |
 | Icons | Lucide React |
-| Hosting | Vercel |
+| Deployment | Vercel |
 
 ---
 
@@ -205,9 +204,9 @@ The cropped image is then used consistently across the DevHub workspace.
 
 The GitHub token stays on the server.
 
-The browser talks to DevHub's own API routes, and personalized user data is protected using Supabase **Row Level Security**.
+The browser talks to DevHub's own API routes, while user-specific workspace data is protected using Supabase **Row Level Security**.
 
-For more detail:
+More details:
 
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
@@ -219,30 +218,30 @@ For more detail:
 devhub/
 │
 ├── public/
-│   └── brand/                    # Brand assets
+│   └── brand/                    # DevHub brand assets
 │
 ├── src/
 │   │
 │   ├── app/
-│   │   ├── api/                  # Server API routes
+│   │   ├── api/                  # API route handlers
 │   │   ├── dashboard/            # Personal dashboard
 │   │   ├── developer/            # Developer profiles
 │   │   ├── repository/           # Repository profiles
-│   │   ├── search/               # Search
-│   │   ├── compare/              # Comparison
-│   │   ├── favourites/           # Saved items
-│   │   └── settings/             # User settings
+│   │   ├── search/               # Search experience
+│   │   ├── compare/              # Comparison tools
+│   │   ├── favourites/           # Saved workspace
+│   │   └── settings/             # Account settings
 │   │
-│   ├── components/               # Shared UI
+│   ├── components/               # Shared UI components
 │   │
 │   ├── lib/
 │   │   ├── github/               # GitHub service layer
 │   │   └── supabase/             # Supabase clients
 │   │
-│   └── types/
+│   └── types/                    # TypeScript types
 │
 ├── supabase/
-│   └── migrations/               # DB + storage migrations
+│   └── migrations/               # Database + storage migrations
 │
 ├── docs/
 ├── package.json
@@ -260,7 +259,7 @@ git clone https://github.com/saiganesh-007/devhub.git
 cd devhub
 ```
 
-### 2. Install packages
+### 2. Install dependencies
 
 ```bash
 npm install
@@ -274,7 +273,7 @@ On Windows:
 copy .env.example .env.local
 ```
 
-Add:
+Add your environment variables:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
@@ -282,7 +281,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 GITHUB_TOKEN=your_github_personal_access_token
 ```
 
-> ⚠️ Never commit `.env.local` or expose `GITHUB_TOKEN` in browser code.
+> ⚠️ Never commit `.env.local` or expose `GITHUB_TOKEN` inside browser-side code.
 
 ### 4. Set up Supabase
 
@@ -292,7 +291,7 @@ Apply the migrations inside:
 supabase/migrations/
 ```
 
-Then configure your authentication URLs from:
+Then configure authentication URLs from:
 
 ```text
 Supabase Dashboard
@@ -318,17 +317,17 @@ http://localhost:3000
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Starts the development server |
-| `npm run lint` | Runs ESLint |
-| `npm run test` | Runs tests |
-| `npm run build` | Creates the production build |
-| `npm start` | Runs the production build |
+| `npm run dev` | Start the development server |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run tests |
+| `npm run build` | Create a production build |
+| `npm start` | Run the production build |
 
 ---
 
 ## 🔌 API Layer
 
-The browser doesn't call GitHub directly.
+The browser doesn't talk directly to GitHub.
 
 DevHub uses its own server-side API layer.
 
@@ -362,7 +361,7 @@ POST   /api/favourites/repositories
 DELETE /api/favourites/repositories/:id
 ```
 
-A successful response looks like:
+Successful responses follow a predictable structure:
 
 ```json
 {
@@ -371,7 +370,7 @@ A successful response looks like:
 }
 ```
 
-Errors use the same predictable structure:
+Errors follow:
 
 ```json
 {
@@ -387,9 +386,9 @@ Errors use the same predictable structure:
 
 ## 🔐 Authentication
 
-Authentication is handled with **Supabase Auth**.
+Authentication is handled using **Supabase Auth**.
 
-Current auth routes:
+Current authentication routes:
 
 ```text
 /login
@@ -400,28 +399,30 @@ Current auth routes:
 /auth/callback
 ```
 
-Protected areas such as the dashboard, saved workspace and settings require an authenticated session.
+Protected parts of DevHub require a valid authenticated session.
+
+That includes the dashboard, saved workspace and account settings.
 
 ---
 
 ## 🛡️ Security
 
-A few things I specifically wanted to keep clean:
+A few things I specifically wanted to keep clean while building DevHub:
 
 - GitHub tokens stay server-side
 - User identity comes from the Supabase session
-- Personalized tables use RLS
-- Avatar uploads are scoped to the logged-in user
+- Personalized tables use Row Level Security
+- Avatar uploads are scoped to the signed-in user
 - API inputs are validated
 - GitHub path values are encoded
-- Secrets stay in environment variables
+- Secrets stay inside environment variables
 - Service-role keys are never exposed to the browser
 
 ---
 
 ## ⚡ Reliability
 
-External APIs are never perfect, so DevHub handles the usual failure cases too.
+External APIs are never perfect, so DevHub handles the common failure cases too.
 
 ```text
 ✓ GitHub primary rate limits
@@ -431,37 +432,38 @@ External APIs are never perfect, so DevHub handles the usual failure cases too.
 ✓ Missing developers
 ✓ Missing repositories
 ✓ Network failures
-✓ Cancelled/stale searches
+✓ Cancelled / stale searches
 ✓ Loading states
 ✓ Empty states
 ```
 
-Search requests are also debounced to avoid hammering GitHub while somebody is still typing.
+Search requests are debounced so the app doesn't hammer GitHub while somebody is still typing.
 
 ---
 
 ## 🎨 Design
 
-DevHub uses a **white + wine** visual system.
+DevHub uses a minimal **white + wine** visual system.
 
 ```text
-Background    #FCFAFA
-Text          #171416
-Wine          #861F3D
-Deep Wine     #4A1020
+Background     #FCFAFA
+Text           #171416
+Wine           #861F3D
+Deep Wine      #4A1020
 ```
 
-The UI is intentionally cleaner than a traditional analytics dashboard.
+I wanted it to feel more like a focused developer tool than a generic analytics dashboard.
 
-I focused on:
+The interface focuses on:
 
-- readable data
+- readable information
 - strong hierarchy
 - low visual noise
 - quick navigation
 - responsive layouts
 - keyboard accessibility
 - useful interaction feedback
+- consistent developer and repository views
 
 ---
 
@@ -469,15 +471,15 @@ I focused on:
 
 DevHub is deployed on **Vercel**.
 
-A push to:
+Every production push to:
 
 ```text
 main
 ```
 
-automatically creates a new production deployment.
+automatically creates a new deployment.
 
-Production environment:
+Required production environment variables:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
@@ -485,27 +487,53 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 GITHUB_TOKEN=
 ```
 
-### 🔗 Live
+### 🔗 Production
 
-**https://devhub-flame-seven.vercel.app**
+**[devhub-flame-seven.vercel.app](https://devhub-flame-seven.vercel.app)**
 
 ---
 
-## 👨‍🚀 About the Developer
+## 🧩 Current Flow
+
+```text
+Landing
+   ↓
+Authentication
+   ↓
+Dashboard
+   ↓
+Search
+   ↓
+Developer / Repository Intelligence
+   ↓
+Compare
+   ↓
+Save
+   ↓
+Personal Workspace
+   ↓
+Settings + Profile Customization
+```
+
+DevHub is currently deployed with live GitHub data and Supabase-backed user accounts.
+
+---
+
+## 👨‍🚀 About Me
 
 ### Sai Ganesh M
 
-Full Stack Developer · AI Developer
+**Full Stack Developer · AI Developer**
 
-I enjoy building products where the UI, backend and actual product logic all connect instead of stopping at a static frontend.
+I like building projects where the frontend, backend and actual product logic all work together instead of stopping at a static UI.
 
-DevHub was built as a full-stack project covering API integration, authentication, protected data, storage, search, analytics-style interfaces and production deployment.
+DevHub gave me a chance to work across API integration, authentication, databases, protected user data, storage, search, UI/UX and production deployment inside one product.
 
 <p>
   <a href="https://github.com/saiganesh-007">
     <img src="https://img.shields.io/badge/GitHub-saiganesh--007-171416?style=for-the-badge&logo=github&logoColor=white" />
   </a>
-  <a href="YOUR_LINKEDIN_URL">
+  <a href="https://www.linkedin.com/in/saiganesh00007/">
     <img src="https://img.shields.io/badge/LinkedIn-Connect-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" />
   </a>
 </p>
@@ -517,9 +545,10 @@ DevHub was built as a full-stack project covering API integration, authenticatio
 | | |
 | --- | --- |
 | 🚀 **Live App** | [Launch DevHub](https://devhub-flame-seven.vercel.app) |
-| 💻 **Source Code** | [GitHub Repository](https://github.com/saiganesh-007/devhub) |
+| 💻 **Source Code** | [saiganesh-007/devhub](https://github.com/saiganesh-007/devhub) |
 | 🧠 **Architecture** | [Architecture Docs](docs/ARCHITECTURE.md) |
 | 💼 **LinkedIn** | [Connect with Sai](https://www.linkedin.com/in/saiganesh00007/) |
+| 👨‍💻 **GitHub** | [@saiganesh-007](https://github.com/saiganesh-007) |
 
 ---
 
@@ -534,5 +563,9 @@ DevHub was built as a full-stack project covering API integration, authenticatio
 <br /><br />
 
 **Next.js · TypeScript · Supabase · GitHub API**
+
+<br />
+
+Made by **Sai Ganesh M**
 
 </div>
