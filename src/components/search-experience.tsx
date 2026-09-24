@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -20,7 +21,6 @@ import type { GitHubRepo, GitHubUser } from "@/types/github";
 import { compactNumber, formatDate } from "@/lib/analytics";
 import { ErrorCard, SearchField, Tabs } from "@/components/ui";
 import { SaveButton } from "@/components/save-button";
-import { addRecentSearch, readLocalHistory, recordLocalHistory, type RecentSearch } from "@/lib/workspace";
 
 type Mode = "developers" | "repositories";
 type Item = GitHubUser | GitHubRepo;
@@ -31,40 +31,57 @@ const suggestions = {
 } as const;
 
 export function SearchExperience() {
-  const [mode, setMode] = useState<Mode>("developers");
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const initialQ = searchParams.get("q") ?? "";
+  const initialType = searchParams.get("type");
+  const [mode, setMode] = useState<Mode>(() => {
+    if (initialType === "repositories" || initialType === "developers")
+      return initialType;
+    if (typeof window !== "undefined") {
+      try {
+        const stored = window.localStorage.getItem("devhub:search-prefs");
+        const parsed = stored ? (JSON.parse(stored) as { defaultSearchType?: string }) : null;
+        if (parsed?.defaultSearchType === "repositories") return "repositories";
+      } catch {
+        // Fall through to default.
+      }
+    }
+    return "developers";
+  });
+  const [query, setQuery] = useState(initialQ);
   const [items, setItems] = useState<Item[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
-  const [sort, setSort] = useState<"stars" | "forks" | "updated">("stars");
-  const [language, setLanguage] = useState("");
-  const [owner, setOwner] = useState("");
-  const [recent, setRecent] = useState<RecentSearch[]>([]);
   const request = useRef(0);
 
+  // Keep the field in sync when arriving via global search (?q= / ?type=).
+  const lastSyncedQ = useRef<string | null>(null);
   useEffect(() => {
-    const timer = setTimeout(() => setRecent(readLocalHistory().filter((item) => item.kind === "search").map((item): RecentSearch => ({ query: item.identifier, type: item.entityType === "repository" ? "repositories" : "developers", timestamp: item.timestamp })).slice(0, 10)), 0);
-    return () => clearTimeout(timer);
-  }, []);
+    const q = searchParams.get("q") ?? "";
+    const t = searchParams.get("type");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (t === "developers" || t === "repositories") setMode(t);
+    if (q && lastSyncedQ.current !== q) {
+      lastSyncedQ.current = q;
+      setQuery(q);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
-    if (query.trim().length < 2) return;
+    if (query.trim().length < 1) return;
     const id = ++request.current;
     const timer = setTimeout(async () => {
       setLoading(true);
       setError("");
       try {
-        const result = await fetchPage(mode, query, 1, { sort, language, owner });
+        const result = await fetchPage(mode, query, 1);
         if (id !== request.current) return;
         setItems(result.items);
         setTotal(result.total_count);
         setPage(1);
-        const entry: RecentSearch = { query: query.trim(), type: mode, timestamp: Date.now() };
-        setRecent((current) => addRecentSearch(current, entry));
-        recordLocalHistory({ kind: "search", entityType: mode === "developers" ? "developer" : "repository", identifier: query.trim(), metadata: { sort, language, owner } });
       } catch (e) {
         if (id === request.current)
           setError(e instanceof Error ? e.message : "Search failed");
@@ -73,7 +90,7 @@ export function SearchExperience() {
       }
     }, 350);
     return () => clearTimeout(timer);
-  }, [query, mode, sort, language, owner]);
+  }, [query, mode]);
 
   function changeMode(value: Mode) {
     request.current++;
@@ -88,7 +105,7 @@ export function SearchExperience() {
     setLoadingMore(true);
     try {
       const next = page + 1;
-      const result = await fetchPage(mode, query, next, { sort, language, owner });
+      const result = await fetchPage(mode, query, next);
       setItems((current) => [...current, ...result.items]);
       setPage(next);
     } catch (e) {
@@ -98,7 +115,7 @@ export function SearchExperience() {
     }
   }
 
-  const idle = query.trim().length < 2;
+  const idle = query.trim().length < 1;
 
   return (
     <div className="search-experience">
@@ -114,8 +131,6 @@ export function SearchExperience() {
             ]}
           />
         </div>
-
-        {mode === "repositories" && <div className="grid gap-3 border-t border-line px-4 py-4 sm:grid-cols-3 sm:px-6"><label className="text-metadata">Sort<select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="mt-1 block h-9 w-full rounded-lg border border-line bg-panel px-2 text-sm text-ink"><option value="stars">Stars</option><option value="forks">Forks</option><option value="updated">Recently updated</option></select></label><label className="text-metadata">Language<input value={language} onChange={(e) => setLanguage(e.target.value)} maxLength={50} placeholder="TypeScript" className="mt-1 block h-9 w-full rounded-lg border border-line bg-panel px-2 text-sm text-ink" /></label><label className="text-metadata">Owner<input value={owner} onChange={(e) => setOwner(e.target.value)} maxLength={39} placeholder="vercel" className="mt-1 block h-9 w-full rounded-lg border border-line bg-panel px-2 text-sm text-ink" /></label></div>}
 
         <div className="px-4 py-5 sm:px-6">
           <SearchField
@@ -143,7 +158,7 @@ export function SearchExperience() {
 
         <div className="flex items-center justify-between border-t border-line px-5 py-2.5 font-mono text-[9px] uppercase tracking-[0.14em] text-ink3 sm:px-7">
           <span>Public GitHub signals</span>
-          <span>{total ? `${compactNumber(total)} results` : "Type at least 2 characters"}</span>
+          <span>{total ? `${compactNumber(total)} results` : "Type to search"}</span>
         </div>
       </div>
 
@@ -162,7 +177,7 @@ export function SearchExperience() {
         )}
 
         {idle && !loading && (
-          <IdleState mode={mode} onSearch={setQuery} recent={recent.filter((item) => item.type === mode)} onClearRecent={() => setRecent((current) => current.filter((item) => item.type !== mode))} />
+          <IdleState mode={mode} onSearch={setQuery} />
         )}
 
         {!idle && !loading && !error && items.length === 0 && (
@@ -203,14 +218,26 @@ export function SearchExperience() {
   );
 }
 
-async function fetchPage(mode: Mode, query: string, page: number, filters: { sort: string; language: string; owner: string }) {
+async function fetchPage(mode: Mode, query: string, page: number) {
+  let perPage = 12;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = window.localStorage.getItem("devhub:search-prefs");
+      const parsed = stored ? (JSON.parse(stored) as { resultsPerPage?: number }) : null;
+      if (parsed?.resultsPerPage === 10 || parsed?.resultsPerPage === 20 || parsed?.resultsPerPage === 30) {
+        perPage = parsed.resultsPerPage;
+      }
+    } catch {
+      // Keep default page size.
+    }
+  }
   const base =
     mode === "developers"
       ? "/api/github/users/search"
       : "/api/github/repositories/search";
-  const params = new URLSearchParams({ q: query, page: String(page) });
-  if (mode === "repositories") { params.set("sort", filters.sort); if (filters.language.trim()) params.set("language", filters.language.trim()); if (filters.owner.trim()) params.set("owner", filters.owner.trim()); }
-  const res = await fetch(`${base}?${params}`);
+  const res = await fetch(
+    `${base}?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`,
+  );
   const body = await res.json();
   if (!res.ok) throw new Error(body.error?.message || "Search failed");
   return body.data as { items: Item[]; total_count: number };
@@ -436,7 +463,7 @@ function getLanguageColor(language: string): string {
   return colors[language] || "#64748b";
 }
 
-function IdleState({ mode, onSearch, recent, onClearRecent }: { mode: Mode; onSearch: (q: string) => void; recent: RecentSearch[]; onClearRecent: () => void }) {
+function IdleState({ mode, onSearch }: { mode: Mode; onSearch: (q: string) => void }) {
   return (
     <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_280px]">
       <div className="card-surface rounded-2xl p-10 text-center">
@@ -452,7 +479,6 @@ function IdleState({ mode, onSearch, recent, onClearRecent }: { mode: Mode; onSe
         </p>
       </div>
       <div className="card-surface rounded-2xl p-6">
-        {recent.length > 0 && <><div className="flex items-center justify-between"><p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink3">Recent searches</p><button type="button" onClick={onClearRecent} className="text-xs text-ink3 hover:text-ink">Clear</button></div><ul className="mt-3 space-y-1">{recent.slice(0, 5).map((item) => <li key={`${item.type}:${item.query}`}><button type="button" onClick={() => onSearch(item.query)} className="w-full rounded-lg px-3 py-2 text-left text-sm text-ink2 hover:bg-panel">{item.query}</button></li>)}</ul><p className="my-4 border-t border-line" /></>}
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink3">
           Try
         </p>

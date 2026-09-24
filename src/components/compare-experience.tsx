@@ -3,14 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeftRight, LoaderCircle, RotateCcw, GitCommit, Tag, CalendarDays } from "lucide-react";
-import type { GitHubRepo, GitHubUser, Contributor, GitHubRelease } from "@/types/github";
+import { ArrowLeftRight, LoaderCircle, RotateCcw, GitCommit, Tag, CalendarDays, User } from "lucide-react";
+import type { GitHubRepo, GitHubUser, Contributor } from "@/types/github";
 import { compactNumber, formatDate, summarizeRepositories, languagePercentages } from "@/lib/analytics";
 import { Tabs } from "@/components/ui";
+import { CompareCombobox, type Suggestion } from "@/components/global-search";
 import { RepoLanguageChart } from "@/components/repo-language-chart";
 import { LanguageChart } from "@/components/language-chart";
-import { EntityAutocomplete } from "@/components/entity-autocomplete";
-import { recordLocalHistory } from "@/lib/workspace";
 
 type CompareType = "developer" | "repository";
 type DevData = { user: GitHubUser; repositories: GitHubRepo[] };
@@ -18,7 +17,6 @@ type RepoData = {
   repository: GitHubRepo;
   contributors: Contributor[];
   languages: Record<string, number>;
-  release?: GitHubRelease | null;
 };
 
 const emptyResult: [DevData | RepoData, DevData | RepoData] | null = null;
@@ -79,7 +77,6 @@ export function CompareExperience() {
       );
       setData(result as [DevData | RepoData, DevData | RepoData]);
       syncUrl(t, sideA, sideB);
-      recordLocalHistory({ kind: "comparison", entityType: t, identifier: sideA.trim(), secondaryIdentifier: sideB.trim(), label: `${sideA.trim()} vs ${sideB.trim()}` });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Comparison failed");
     } finally {
@@ -115,7 +112,40 @@ export function CompareExperience() {
     };
   }, [searchParams, runWith]);
 
+  function entityKey(value: string): string {
+    const clean = value.trim().toLowerCase();
+    if (!clean) return "";
+    return type === "developer" ? `dev:${clean}` : `repo:${clean}`;
+  }
+
+  function pickSide(side: "a" | "b", s: Suggestion) {
+    const identifier = s.kind === "developer" ? s.login : s.full_name;
+    if (side === "a") {
+      if (entityKey(identifier) === entityKey(b)) {
+        setError("Select two different entities to compare.");
+        return;
+      }
+      setError("");
+      setA(identifier);
+    } else {
+      if (entityKey(identifier) === entityKey(a)) {
+        setError("Select two different entities to compare.");
+        return;
+      }
+      setError("");
+      setB(identifier);
+    }
+  }
+
+  const duplicate =
+    a.trim() !== "" &&
+    a.trim().toLowerCase() === b.trim().toLowerCase();
+
   function run() {
+    if (duplicate) {
+      setError("Select two different entities to compare.");
+      return;
+    }
     void runWith(type, a, b, true);
   }
 
@@ -126,12 +156,6 @@ export function CompareExperience() {
     setError("");
     lastRan.current = "";
     syncUrl(type, "", "");
-  }
-
-  function clearSide(side: "a" | "b") {
-    if (side === "a") setA(""); else setB("");
-    setData(emptyResult); setError(""); lastRan.current = "";
-    syncUrl(type, side === "a" ? "" : a, side === "b" ? "" : b);
   }
 
   function swap() {
@@ -162,12 +186,14 @@ export function CompareExperience() {
       />
 
       <div className="mt-6 grid items-end gap-3 md:grid-cols-[1fr_auto_1fr]">
-        <EntityAutocomplete
+        <CompareCombobox
+          kind={type}
           label={`First ${type}`}
-          type={type}
           value={a}
-          onChange={setA}
-          placeholder={type === "developer" ? "torvalds" : "facebook/react"}
+          onTextChange={setA}
+          onPick={(s) => pickSide("a", s)}
+          placeholder={type === "developer" ? "Search developer (e.g. torvalds)" : "Search repository (e.g. facebook/react)"}
+          excludeKey={entityKey(b) || undefined}
         />
 
         <div className="flex items-center justify-center gap-2 pb-2">
@@ -179,8 +205,6 @@ export function CompareExperience() {
           >
             <ArrowLeftRight size={16} aria-hidden="true" />
           </button>
-          <button type="button" onClick={() => clearSide("a")} aria-label="Clear first side" className="btn-icon">A×</button>
-          <button type="button" onClick={() => clearSide("b")} aria-label="Clear second side" className="btn-icon">B×</button>
           <button
             type="button"
             onClick={clear}
@@ -191,19 +215,21 @@ export function CompareExperience() {
           </button>
         </div>
 
-        <EntityAutocomplete
+        <CompareCombobox
+          kind={type}
           label={`Second ${type}`}
-          type={type}
           value={b}
-          onChange={setB}
-          placeholder={type === "developer" ? "gaearon" : "vuejs/core"}
+          onTextChange={setB}
+          onPick={(s) => pickSide("b", s)}
+          placeholder={type === "developer" ? "Search developer (e.g. gaearon)" : "Search repository (e.g. vuejs/core)"}
+          excludeKey={entityKey(a) || undefined}
         />
       </div>
 
       <button
         type="button"
         onClick={run}
-        disabled={loading || !a.trim() || !b.trim()}
+        disabled={loading || !a.trim() || !b.trim() || duplicate}
         className="btn btn-primary mt-5 w-full sm:w-auto"
       >
         {loading && <LoaderCircle size={15} className="animate-spin" />}
@@ -216,7 +242,23 @@ export function CompareExperience() {
         </p>
       )}
 
-      {!data && !loading && !error && <div className="comparison-empty"><span className="text-metadata">Two perspectives. One view.</span><h2>Add two {type === "developer" ? "developers" : "repositories"} to begin.</h2><p>Align public metrics, technology, and activity. Use the differences to inform your own judgment.</p></div>}
+      {!data && !loading && !error && (
+        <div className="comparison-empty card-surface p-8 md:p-12 text-center">
+          <div className="mx-auto max-w-md">
+            <div className="flex items-center justify-center gap-6 mb-6">
+              <div className="relative flex-shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full border border-line bg-panel flex items-center justify-center overflow-hidden">
+                <User size={24} className="text-ink3" aria-hidden="true" />
+              </div>
+              <span className="text-xs font-mono text-ink3 tracking-wider uppercase">VS</span>
+              <div className="relative flex-shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full border border-line bg-panel flex items-center justify-center overflow-hidden">
+                <User size={24} className="text-ink3" aria-hidden="true" />
+              </div>
+            </div>
+            <h3 className="text-lg md:text-xl font-semibold text-ink mb-2">Choose two developers</h3>
+            <p className="text-sm md:text-base text-ink3">Compare their GitHub signals side by side.</p>
+          </div>
+        </div>
+      )}
       {loading && <div className="comparison-loading" role="status" aria-label="Loading comparison"><div className="skeleton h-48" /><div className="skeleton h-48" /></div>}
       {data && !loading && (
         <Results type={type} data={data} onRun={run} onSwap={swap} />
@@ -280,8 +322,6 @@ function Results({
                 <FooterRow>
                   Primary language: <b>{s.languages[0]?.name || "—"}</b>
                 </FooterRow>
-                <FooterRow>Most starred: <b>{s.mostStarred?.name || "—"}</b> · Recently updated: <b>{[...d.repositories].sort((x,y) => +new Date(y.updated_at) - +new Date(x.updated_at))[0]?.name || "—"}</b></FooterRow>
-                {(d.user.company || d.user.location) && <FooterRow>{[d.user.company, d.user.location].filter(Boolean).join(" · ")}</FooterRow>}
                 {langs.length > 0 && (
                   <div className="mt-6">
                     <p className="text-metadata mb-3">Language Distribution</p>
@@ -338,12 +378,10 @@ function Results({
               <Metric label="Stars" value={compactNumber(d.repository.stargazers_count)} />
               <Metric label="Forks" value={compactNumber(d.repository.forks_count)} />
               <Metric label="Watchers" value={compactNumber(d.repository.watchers_count || 0)} />
-              <Metric label="Subscribers" value={compactNumber(d.repository.subscribers_count || 0)} />
               <Metric label="Issues" value={compactNumber(d.repository.open_issues_count || 0)} />
               <Metric label="Contributors" value={d.contributors.length} />
               <Metric label="Size" value={`${compactNumber(d.repository.size || 0)} KB`} />
             </div>
-            <div className="mt-4 text-sm text-ink3">Created {formatDate(d.repository.created_at)} · Pushed {formatDate(d.repository.pushed_at)} · Branch <b>{d.repository.default_branch || "—"}</b>{d.release ? <> · Release <a href={d.release.html_url} target="_blank" rel="noreferrer" className="text-brand1">{d.release.name || d.release.tag_name}</a></> : null}</div>
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-ink3">
               {d.repository.language && (
                 <span className="flex items-center gap-1">
@@ -496,9 +534,10 @@ function CompareCard({
 }
 
 function CardHeader({ title, subtitle, avatar }: { title: string; subtitle: string; avatar?: string }) {
+  const [showAvatar, setShowAvatar] = useState(true);
   return (
     <div className="mb-6">
-      {avatar && (
+      {avatar && showAvatar && (
         <div className="mb-4">
           <Image
             src={avatar}
@@ -506,6 +545,7 @@ function CardHeader({ title, subtitle, avatar }: { title: string; subtitle: stri
             width={80}
             height={80}
             className="size-20 rounded-2xl ring-1 ring-line object-cover"
+            onError={() => setShowAvatar(false)}
           />
         </div>
       )}

@@ -1,6 +1,54 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Code2 } from "lucide-react";
+
+/**
+ * Single source of truth for the DevHub mark used everywhere EXCEPT the
+ * loading page. The loader keeps its own artwork untouched.
+ * Exact source file: `design-references/newlogo.png`, copied byte-for-byte
+ * to `/brand/devhub-logo.png`. Artwork is used exactly as provided: no
+ * recolor, crop, or distortion — always `object-fit: contain` at 1:1.
+ */
+export const DEVHUB_MARK_SRC = "/brand/devhub-logo.png";
+
+/**
+ * Canonical shared DevHub logo. All non-loader branding delegates to this
+ * component so the artwork has exactly one markup source.
+ */
+export function DevHubLogo({
+  size = 36,
+  className = "",
+  style,
+  priority = false,
+  label = "DevHub",
+}: {
+  size?: number;
+  className?: string;
+  style?: CSSProperties;
+  priority?: boolean;
+  label?: string;
+}) {
+  return (
+    <span
+      className={`relative grid place-items-center overflow-hidden ${className}`}
+      style={{ width: size, height: size, ...style }}
+      aria-hidden={label ? undefined : true}
+      role={label ? "img" : undefined}
+      aria-label={label || undefined}
+    >
+      <Image
+        src={DEVHUB_MARK_SRC}
+        alt=""
+        width={Math.round(size * 2)}
+        height={Math.round(size * 2)}
+        priority={priority}
+        draggable={false}
+        className="h-full w-full select-none object-contain"
+      />
+    </span>
+  );
+}
 
 /**
  * Small DevHub cat mark.
@@ -15,20 +63,11 @@ export function CatMark({
   className?: string;
 }) {
   return (
-    <span
-      className={`chip-light relative grid place-items-center overflow-hidden rounded-md border border-sky-400/35 bg-sky-400/10 shadow-[0_0_12px_rgba(56,189,248,0.2)] ${className}`}
-      style={{ width: size, height: size }}
-      aria-hidden="true"
-    >
-      <Image
-        src="/brand/devhub-logo.png"
-        alt=""
-        width={size * 3}
-        height={size}
-        draggable={false}
-        className="absolute left-0 top-0 h-full w-[300%] max-w-none select-none object-contain object-left"
-      />
-    </span>
+    <DevHubLogo
+      size={size}
+      label=""
+      className={`chip-light rounded-md border border-line bg-surface-1 ${className}`}
+    />
   );
 }
 
@@ -40,16 +79,7 @@ export function BrandLockup({ className = "" }: { className?: string }) {
     <span
       className={`inline-flex items-center rounded-xl border border-line bg-brand-tile p-1.5 shadow-soft ${className}`}
     >
-      <span className="relative block aspect-[2172/724] h-7">
-        <Image
-          src="/brand/devhub-logo.png"
-          alt="DevHub"
-          fill
-          sizes="96px"
-          className="object-contain"
-          priority
-        />
-      </span>
+      <DevHubLogo size={28} label="DevHub" priority className="rounded-lg" />
     </span>
   );
 }
@@ -61,10 +91,12 @@ export function Logo({
   href = "/",
   className = "",
   wordmark = true,
+  size = 34,
 }: {
   href?: string;
   className?: string;
   wordmark?: boolean;
+  size?: number;
 }) {
   return (
     <Link
@@ -73,7 +105,7 @@ export function Logo({
       aria-label="DevHub home"
     >
       <CatMark
-        size={34}
+        size={size}
         className="transition-transform group-hover:scale-105"
       />
 
@@ -97,32 +129,12 @@ export function DevhubCatMark({
   priority?: boolean;
 }) {
   return (
-    <span
-      aria-hidden="true"
-      style={{
-        display: "inline-grid",
-        placeItems: "center",
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        overflow: "hidden",
-        flex: "none",
-      }}
-    >
-      <Image
-        src="/brand/devhub-logo.png"
-        alt=""
-        width={Math.round(size * 3.4)}
-        height={Math.round(size * 3.4)}
-        priority={priority}
-        draggable={false}
-        style={{
-          objectFit: "cover",
-          objectPosition: "12% 50%",
-          transform: "scale(1.02)",
-        }}
-      />
-    </span>
+    <DevHubLogo
+      size={size}
+      label=""
+      priority={priority}
+      style={{ borderRadius: size / 2, flex: "none" }}
+    />
   );
 }
 
@@ -137,24 +149,13 @@ export function DevhubCatBadge({
   priority?: boolean;
 }) {
   return (
-    <span
+    <DevHubLogo
+      size={size}
+      label=""
+      priority={priority}
       className="devhub-cat-badge"
-      aria-hidden="true"
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-      }}
-    >
-      <Image
-        src="/brand/devhub-logo.png"
-        alt=""
-        width={256}
-        height={256}
-        priority={priority}
-        draggable={false}
-      />
-    </span>
+      style={{ borderRadius: size / 2 }}
+    />
   );
 }
 
@@ -163,7 +164,7 @@ export function DevhubCatBadge({
  */
 export function LogoFallback() {
   return (
-    <span className="grid size-7 place-items-center rounded-md border border-sky-400/35 bg-sky-400/10 text-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.2)]">
+    <span className="grid size-7 place-items-center rounded-md border border-line bg-surface-1 text-primary shadow-none">
       <Code2 size={15} />
     </span>
   );
