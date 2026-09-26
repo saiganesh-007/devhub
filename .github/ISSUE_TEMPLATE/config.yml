@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: DevHub Discussions
+    url: https://github.com/saiganesh-007/devhub/discussions
+    about: Ask questions, share ideas, or discuss proposed changes with the community.
+  - name: Security policy
+    url: https://github.com/saiganesh-007/devhub/security/policy
+    about: Please review the security policy before reporting a vulnerability.
