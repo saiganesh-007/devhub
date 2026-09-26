@@ -23,6 +23,8 @@ Keep the GitHub research you care about in one clean workspace.
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-Production-000000?style=flat-square&logo=vercel&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/saiganesh-007/devhub?style=flat-square)](https://github.com/saiganesh-007/devhub/releases/latest)
 
 </div>
 
@@ -519,6 +521,29 @@ DevHub is currently deployed with live GitHub data and Supabase-backed user acco
 
 ---
 
+## 🤝 Open Source & Contributing
+
+DevHub is open source and welcomes useful contributions.
+
+Before contributing, please read:
+
+- [Contributing Guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security Policy](SECURITY.md)
+- [GitHub Discussions](https://github.com/saiganesh-007/devhub/discussions)
+- [Open Issues](https://github.com/saiganesh-007/devhub/issues)
+- [Latest Release](https://github.com/saiganesh-007/devhub/releases/latest)
+
+Bug fixes, tests, accessibility improvements, performance work, documentation, GitHub API reliability improvements and thoughtful product features are all welcome.
+
+---
+
+## 📜 License
+
+DevHub is released under the [MIT License](LICENSE).
+
+---
+
 ## 👨‍🚀 About Me
 
 ### Sai Ganesh M
@@ -547,6 +572,9 @@ DevHub gave me a chance to work across API integration, authentication, database
 | 🚀 **Live App** | [Launch DevHub](https://devhub-flame-seven.vercel.app) |
 | 💻 **Source Code** | [saiganesh-007/devhub](https://github.com/saiganesh-007/devhub) |
 | 🧠 **Architecture** | [Architecture Docs](docs/ARCHITECTURE.md) |
+| 🧩 **Contributing** | [Contribution Guide](CONTRIBUTING.md) |
+| 📦 **Releases** | [DevHub Releases](https://github.com/saiganesh-007/devhub/releases) |
+| 📜 **License** | [MIT](LICENSE) |
 | 💼 **LinkedIn** | [Connect with Sai](https://www.linkedin.com/in/saiganesh00007/) |
 | 👨‍💻 **GitHub** | [@saiganesh-007](https://github.com/saiganesh-007) |
 
